@@ -18,9 +18,11 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
         'email',
         'password',
+        'job_title',
     ];
 
     /**
@@ -32,6 +34,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function activities()
+    {
+        return $this->belongsToMany(Activity::class, 'activity_user');
+    }
 
     /**
      * Get the attributes that should be cast.
