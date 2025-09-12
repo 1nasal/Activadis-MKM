@@ -38,6 +38,14 @@
                         </div>
 
                         <div class="mt-4">
+                            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+                            <x-text-input id="password_confirmation" class="block mt-1 w-full"
+                                          type="text"
+                                          name="password_confirmation" required autocomplete="new-password" />
+                            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                        </div>
+
+                        <div class="mt-4">
                             <x-input-label for="job_title" :value="__('Job title')" />
                             <x-text-input id="job_title" class="block mt-1 w-full" type="text" name="job_title" :value="old('job_title')" required />
                             <x-input-error :messages="$errors->get('job_title')" class="mt-2" />

@@ -29,6 +29,9 @@
                                 <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                     Job title
                                 </th>
+                                <th>
+                                    Actions
+                                </th>
                             </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
@@ -44,13 +47,13 @@
                                         {{ $user->email }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $car->job_title }}
+                                        {{ $user->job_title }}
                                     </td>
-                                    {{--                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">--}}
-                                    {{--                                        <x-link-button href="{{ route('students.show', $student->id) }}">--}}
-                                    {{--                                            Show more--}}
-                                    {{--                                        </x-link-button>--}}
-                                    {{--                                    </td>--}}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <x-link-button href="{{ route('users.show', $user->id) }}">
+                                            Show more
+                                        </x-link-button>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
