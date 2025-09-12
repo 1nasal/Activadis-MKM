@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
@@ -7,17 +6,29 @@ use Illuminate\Http\Request;
 
 class ActivityController extends Controller
 {
+    /**
+     * Display a listing of activities for users
+     */
     public function index()
     {
-        $activities = Activity::all();
-        return view('activity.index', compact('activities'));
+        $activities = Activity::with(['users', 'externals'])
+            ->where('start_time', '>', now())
+            ->orderBy('start_time', 'asc')
+            ->paginate(12);
+        return view('activityList', compact('activities'));
     }
 
+    /**
+     * Show the form for creating a new activity
+     */
     public function create()
     {
         return view('activity.create');
     }
 
+    /**
+     * Store a newly created activity in storage
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -39,16 +50,27 @@ class ActivityController extends Controller
         return redirect()->route('activities.index')->with('success', 'Activity created!');
     }
 
+    /**
+     * Show activity details
+     */
     public function show(Activity $activity)
     {
+        $activity->load(['users', 'externals']);
+        
         return view('activity.show', compact('activity'));
     }
 
+    /**
+     * Show the form for editing the specified activity
+     */
     public function edit(Activity $activity)
     {
         return view('activity.edit', compact('activity'));
     }
 
+    /**
+     * Update the specified activity in storage
+     */
     public function update(Request $request, Activity $activity)
     {
         $validated = $request->validate([
@@ -70,9 +92,13 @@ class ActivityController extends Controller
         return redirect()->route('activities.index')->with('success', 'Activity updated!');
     }
 
+    /**
+     * Remove the specified activity from storage
+     */
     public function destroy(Activity $activity)
     {
         $activity->delete();
+
         return redirect()->route('activities.index')->with('success', 'Activity deleted!');
     }
 }

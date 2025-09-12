@@ -3,10 +3,7 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Http\Controllers\ActivityController;
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -25,5 +22,9 @@ Route::middleware('auth')->group(function () {
 Route::get('/activity', function () {
     return view('activity');
 })->name('activity');
+
+Route::get('/', [App\Http\Controllers\ActivityController::class, 'index']);
+Route::get('/activities', [App\Http\Controllers\ActivityController::class, 'index'])->name('activities.index');
+Route::get('/activities/{activity}', [App\Http\Controllers\ActivityController::class, 'show'])->name('activities.show');
 
 require __DIR__.'/auth.php';
