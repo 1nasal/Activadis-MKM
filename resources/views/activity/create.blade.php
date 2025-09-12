@@ -59,13 +59,13 @@
 
                     <div class="mb-4">
                         <label class="block font-medium" for="max_participants">Max Participants</label>
-                        <input class="w-full border rounded p-2" type="number" name="max_participants" id="max_participants" value="{{ old('max_participants') }}" required>
+                        <input class="w-full border rounded p-2" type="number" name="max_participants" id="max_participants" value="{{ old('max_participants') }}">
                         @error('max_participants') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block font-medium" for="min_participants">Min Participants</label>
-                        <input class="w-full border rounded p-2" type="number" name="min_participants" id="min_participants" value="{{ old('min_participants') }}" required>
+                        <input class="w-full border rounded p-2" type="number" name="min_participants" id="min_participants" value="{{ old('min_participants') }}">
                         @error('min_participants') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 

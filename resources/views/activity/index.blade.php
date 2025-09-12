@@ -13,8 +13,38 @@
                         {{ __("Create Activity") }}
                     </a>
                 </div>
+                <div class="p-6">
+                    @if($activities->count())
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2">Name</th>
+                                    <th class="px-4 py-2">Location</th>
+                                    <th class="px-4 py-2">Start-time</th>
+                                    <th class="px-4 py-2">End-time</th>
+                                    <th class="px-4 py-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($activities as $activity)
+                                    <tr>
+                                        <td class="border px-4 py-2">{{ $activity->name }}</td>
+                                        <td class="border px-4 py-2">{{ $activity->location }}</td>
+                                        <td class="border px-4 py-2">{{ $activity->start_time }}</td>
+                                        <td class="border px-4 py-2">{{ $activity->end_time }}</td>
+                                        <td class="border px-4 py-2">
+                                            <a href="{{ route('activities.show', $activity) }}" class="text-blue-600 hover:underline">Show more</a>
+                                            <a href="{{ route('activities.edit', $activity) }}" class="text-yellow-600 hover:underline ml-2">Edit</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @else
+                        <p class="text-gray-500">Er zijn nog geen activiteiten.</p>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
-
 </x-app-layout>

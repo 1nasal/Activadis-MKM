@@ -28,8 +28,8 @@ class ActivityController extends Controller
             'start_time' => 'required|date',
             'end_time' => 'required|date|after_or_equal:start_time',
             'cost' => 'required|numeric',
-            'max_participants' => 'required|integer',
-            'min_participants' => 'required|integer',
+            'max_participants' => 'nullable|integer',
+            'min_participants' => 'nullable|integer',
             'image' => 'nullable|string',
             'requirements' => 'nullable|string',
         ]);
@@ -59,8 +59,8 @@ class ActivityController extends Controller
             'start_time' => 'required|date',
             'end_time' => 'required|date|after_or_equal:start_time',
             'cost' => 'required|numeric',
-            'max_participants' => 'required|integer',
-            'min_participants' => 'required|integer',
+            'max_participants' => 'nullable|integer',
+            'min_participants' => 'nullable|integer',
             'image' => 'nullable|string',
             'requirements' => 'nullable|string',
         ]);
