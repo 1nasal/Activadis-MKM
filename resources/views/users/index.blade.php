@@ -16,52 +16,52 @@
                     <div class="overflow-x-auto mt-6">
                         <table class="min-w-full divide-y divide-gray-300">
                             <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                    Voornaam
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                    Achternaam
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                    E-mail
-                                </th>
-                                <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                    Functietitel
-                                </th>
-                                <th>
-                                    Acties
-                                </th>
-                            </tr>
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                        Voornaam
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                        Achternaam
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                        E-mail
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                        Functietitel
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                        Acties
+                                    </th>
+                                </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 bg-white">
-                            @forelse($users as $user)
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $user->first_name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $user->last_name }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $user->email }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ $user->job_title }}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        <x-link-button href="{{ route('users.show', $user->id) }}">
-                                            Meer weergeven
-                                        </x-link-button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="2" class="px-6 py-4 text-sm text-gray-500">
-                                        Geen gebruikers gevonden.
-                                    </td>
-                                </tr>
-                            @endforelse
+                                @forelse($users as $user)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $user->first_name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $user->last_name }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $user->email }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $user->job_title }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            <x-link-button href="{{ route('users.show', $user->id) }}">
+                                                Meer weergeven
+                                            </x-link-button>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-4 text-sm text-gray-500">
+                                            Geen gebruikers gevonden.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
