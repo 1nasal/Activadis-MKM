@@ -27,7 +27,6 @@ class UserController extends Controller
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'max:255', 'email', 'unique:users,email'],
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
                 'job_title' => ['required', 'string', 'max:255'],
                 'role' => ['required', 'string', 'max:255'],
             ]);
@@ -36,7 +35,6 @@ class UserController extends Controller
             $user->first_name = $validated['first_name'];
             $user->last_name = $validated['last_name'];
             $user->email = $validated['email'];
-            $user->password = Hash::make($validated['password']);
             $user->job_title = $validated['job_title'];
             $user->role = $validated['role'];
             $user->activated = false;
@@ -78,7 +76,6 @@ class UserController extends Controller
                 'first_name' => ['required', 'string', 'max:255'],
                 'last_name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'string', 'max:255', 'email'],
-                'password' => ['required', 'string', 'min:8', 'confirmed'],
                 'job_title' => ['required', 'string', 'max:255'],
                 'role' => ['required', 'string', 'max:255'],
             ]);
@@ -86,7 +83,6 @@ class UserController extends Controller
             $user->first_name = $validated['first_name'];
             $user->last_name = $validated['last_name'];
             $user->email = $validated['email'];
-            $user->password = Hash::make($validated['password']);
             $user->job_title = $validated['job_title'];
             $user->role = $validated['role'];
             $user->save();

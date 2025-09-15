@@ -32,20 +32,6 @@
                         </div>
 
                         <div class="mt-4">
-                            <x-input-label for="password" :value="__('Wachtwoord')" />
-                            <x-text-input id="password" class="block mt-1 w-full" type="text" name="password" :value="old('password')" required />
-                            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="password_confirmation" :value="__('Bevestig wachtwoord')" />
-                            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                          type="text"
-                                          name="password_confirmation" required autocomplete="new-password" />
-                            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-                        </div>
-
-                        <div class="mt-4">
                             <x-input-label for="job_title" :value="__('Functietitel')" />
                             <x-text-input id="job_title" class="block mt-1 w-full" type="text" name="job_title" :value="old('job_title')" required />
                             <x-input-error :messages="$errors->get('job_title')" class="mt-2" />
