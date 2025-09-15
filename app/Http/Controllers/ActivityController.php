@@ -9,15 +9,28 @@ class ActivityController extends Controller
     /**
      * Display a listing of activities for users
      */
+    public function home()
+    {
+        $activities = Activity::with(['users', 'externals'])
+            ->where('start_time', '>', now())
+            ->orderBy('start_time', 'asc')
+            ->paginate(12);
+        
+        return view('activityList', compact('activities'));
+    }
+
+    /**
+     * Display listing for activities index (/activities)
+     */
     public function index()
     {
         $activities = Activity::with(['users', 'externals'])
             ->where('start_time', '>', now())
             ->orderBy('start_time', 'asc')
             ->paginate(12);
-        return view('activityList', compact('activities'));
+        
+        return view('activity.index', compact('activities'));
     }
-
     /**
      * Show the form for creating a new activity
      */
@@ -29,26 +42,26 @@ class ActivityController extends Controller
     /**
      * Store a newly created activity in storage
      */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'location' => 'required|string|max:255',
-            'includes_food' => 'required|boolean',
-            'description' => 'required|string',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after_or_equal:start_time',
-            'cost' => 'required|numeric',
-            'max_participants' => 'nullable|integer',
-            'min_participants' => 'nullable|integer',
-            'image' => 'nullable|string',
-            'requirements' => 'nullable|string',
-        ]);
+        public function store(Request $request)
+        {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'location' => 'required|string|max:255',
+                'includes_food' => 'required|boolean',
+                'description' => 'required|string',
+                'start_time' => 'required|date',
+                'end_time' => 'required|date|after_or_equal:start_time',
+                'cost' => 'required|numeric',
+                'max_participants' => 'nullable|integer',
+                'min_participants' => 'nullable|integer',
+                'image' => 'nullable|string',
+                'requirements' => 'nullable|string',
+            ]);
 
-        Activity::create($validated);
+            Activity::create($validated);
 
-        return redirect()->route('activities.index')->with('success', 'Activity created!');
-    }
+            return redirect()->route('activities.index')->with('success', 'Activity created!');
+        }
 
     /**
      * Show activity details

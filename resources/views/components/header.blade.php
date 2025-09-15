@@ -1,7 +1,12 @@
 <header class="header">
     <nav class="nav-container">
         <a href="{{ route('activities.index') }}" class="logo">
-            Actievadis
+            <img
+                src="{{ asset('images/logo.svg') }}"
+                alt="Covadis Logo"
+                class="h-8 w-auto"
+            />
+            
         </a>
         
         <ul class="nav-menu" id="nav-menu">
