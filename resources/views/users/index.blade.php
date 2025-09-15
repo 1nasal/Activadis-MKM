@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Users
+            Gebruikers
         </h2>
     </x-slot>
 
@@ -10,7 +10,7 @@
             <div class="bg-white shadow sm:rounded-lg">
                 <div class="p-6">
                     <x-link-button href="{{ route('users.create') }}">
-                        + New User
+                        Nieuwe Gebruiker
                     </x-link-button>
 
                     <div class="overflow-x-auto mt-6">
@@ -18,19 +18,19 @@
                             <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                    First name
+                                    Voornaam
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                    Last name
+                                    Achternaam
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                     E-mail
                                 </th>
                                 <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                    Job title
+                                    Functietitel
                                 </th>
                                 <th>
-                                    Actions
+                                    Acties
                                 </th>
                             </tr>
                             </thead>
@@ -51,14 +51,14 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         <x-link-button href="{{ route('users.show', $user->id) }}">
-                                            Show more
+                                            Meer weergeven
                                         </x-link-button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
                                     <td colspan="2" class="px-6 py-4 text-sm text-gray-500">
-                                        No users found.
+                                        Geen gebruikers gevonden.
                                     </td>
                                 </tr>
                             @endforelse
