@@ -9,7 +9,7 @@
 <body class="bg-gray-50">
     <x-header />
 
-    <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="max-w-6xl mx-auto py-8">
         <header class="mb-10">
             <h1 class="text-2xl font-bold text-gray-800 mb-3">Aankomende Activiteiten</h1>
             <p class="text-gray-600">Overzicht van alle geplande activiteiten</p>
