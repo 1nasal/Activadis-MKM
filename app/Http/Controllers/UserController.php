@@ -39,6 +39,10 @@ class UserController extends Controller
             $user->password = Hash::make($validated['password']);
             $user->job_title = $validated['job_title'];
             $user->role = $validated['role'];
+            $user->activated = false;
+
+            //hier moet hij reset link sturen
+            // Password::sendResetLink(['email' => $user->email]);
 
             $user->save();
 
