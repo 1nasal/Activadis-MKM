@@ -1,6 +1,6 @@
 <header class="header">
     <nav class="nav-container">
-        <a href="{{ route('activities.index') }}" class="logo">
+        <a href="{{ route('home') }}" class="logo">
             <img
                 src="{{ asset('images/logo.svg') }}"
                 alt="Covadis Logo"
