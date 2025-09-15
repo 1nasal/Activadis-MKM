@@ -36,7 +36,7 @@ Route::prefix('activities')->name('activities.')->group(function () {
         Route::get('/create', [ActivityController::class, 'create'])->name('create');
         Route::post('/', [ActivityController::class, 'store'])->name('store');
         Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
-        Route::patch('/{activity}', [ActivityController::class, 'update'])->name('update');
+        Route::put('/{activity}', [ActivityController::class, 'update'])->name('update');
         Route::delete('/{activity}', [ActivityController::class, 'destroy'])->name('destroy');
     });
     
