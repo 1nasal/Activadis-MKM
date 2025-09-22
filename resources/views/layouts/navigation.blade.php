@@ -9,21 +9,32 @@
                         <img src="{{ asset('images/logo.svg') }}" alt="Covadis Logo" class="h-8 w-auto" />
                     </a>
                 </div>
-
+                
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
-                        {{ __('Gebruikers') }}
-                    </x-nav-link>
-                </div>
+                    <!-- New Activiteiten link going to homepage with yellow button styling -->
+                    <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') || request()->is('/') ? 'active' : '' }} flex items-center space-x-2 px-2 py-1 my-2 rounded-md text-white font-medium hover:opacity-90 transition-opacity" style="background-color: #FAA21B;">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9,22 9,12 15,12 15,22"/>
+                        </svg>
+                        <span>{{ __('Activiteiten') }}</span>
+                    </a>
 
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('activities.index')" :active="request()->routeIs('activities.index')">
-                        {{ __('Activiteiten') }}
+                    <!-- Renamed activities.index to "Activiteiten beheren" -->
+
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                        {{ __('Mijn activiteiten') }}
                     </x-nav-link>
+                    
+                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                        {{ __('Gebruikers beheren') }}
+                    </x-nav-link>
+
+                                        <x-nav-link :href="route('activities.index')" :active="request()->routeIs('activities.index')">
+                        {{ __('Activiteiten beheren') }}
+                    </x-nav-link>
+
                 </div>
             </div>
 
@@ -76,8 +87,24 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
+            <!-- New responsive Activiteiten link going to homepage with yellow button styling -->
+            <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') || request()->is('/') ? 'active' : '' }} flex items-center space-x-2 px-2 py-1 mx-4 my-2 rounded-md text-white font-medium hover:opacity-90 transition-opacity" style="background-color: #FAA21B;">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+                <span>{{ __('Activiteiten') }}</span>
+            </a>
+
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+                {{ __('Mijn activiteiten') }}
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
+                {{ __('Gebruikers beheren') }}
+            </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('activities.index')" :active="request()->routeIs('activities.index')">
+                {{ __('Activiteiten beheren') }}
             </x-responsive-nav-link>
         </div>
 

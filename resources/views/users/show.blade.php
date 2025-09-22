@@ -27,9 +27,9 @@
                         <div>
                             <span class="font-semibold">E-mail:</span> {{ $user->email }}
                         </div>
-                        <div>
+                        {{-- <div>
                             <span class="font-semibold">Wachtwoord:</span> {{ $user->password }}
-                        </div>
+                        </div> --}}
                         <div>
                             <span class="font-semibold">Functietitel:</span> {{ $user->job_title }}
                         </div>
