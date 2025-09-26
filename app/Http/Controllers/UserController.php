@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 
 class UserController extends Controller
 {
@@ -25,26 +26,26 @@ class UserController extends Controller
         try {
             $validated = $request->validate([
                 'first_name' => ['required', 'string', 'max:255'],
-                'last_name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'max:255', 'email', 'unique:users,email'],
-                'job_title' => ['required', 'string', 'max:255'],
-                'role' => ['required', 'string', 'max:255'],
+                'last_name'  => ['required', 'string', 'max:255'],
+                'email'      => ['required', 'string', 'max:255', 'email', 'unique:users,email'],
+                'job_title'  => ['required', 'string', 'max:255'],
+                'role'       => ['required', 'string', 'max:255'],
             ]);
 
             $user = new User();
             $user->first_name = $validated['first_name'];
-            $user->last_name = $validated['last_name'];
-            $user->email = $validated['email'];
-            $user->job_title = $validated['job_title'];
-            $user->role = $validated['role'];
-            $user->activated = false;
-
-            //hier moet hij reset link sturen
-            // Password::sendResetLink(['email' => $user->email]);
+            $user->last_name  = $validated['last_name'];
+            $user->email      = $validated['email'];
+            $user->job_title  = $validated['job_title'];
+            $user->role       = $validated['role'];
+            $user->activated  = false;
 
             $user->save();
 
-            return redirect()->route('users.index')->with('success', 'User created!');
+            // reset link sturen naar aangemaakte gebruiker
+            Password::sendResetLink(['email' => $user->email]);
+
+            return redirect()->route('users.index')->with('success', 'User created & email sent!');
         } catch (\Exception $e) {
             dd($e);
         }
