@@ -6,30 +6,189 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow sm:rounded-lg p-8">
-                <h3 class="text-2xl font-bold mb-4">{{ $activity->name }}</h3>
-                <ul class="mb-6">
-                    <li><strong>Locatie:</strong> {{ $activity->location }}</li>
-                    <li><strong>Inclusief eten:</strong> {{ $activity->includes_food ? 'Ja' : 'Nee' }}</li>
-                    <li><strong>Beschrijving:</strong> {{ $activity->description }}</li>
-                    <li><strong>Starttijd:</strong> {{ $activity->start_time }}</li>
-                    <li><strong>Eindtijd:</strong> {{ $activity->end_time }}</li>
-                    <li><strong>Kosten:</strong> €{{ number_format($activity->cost, 2, ',', '.') }}</li>
-                    <li><strong>Maximaal aantal deelnemers:</strong> {{ $activity->max_participants ?? '-' }}</li>
-                    <li><strong>Minimaal aantal deelnemers:</strong> {{ $activity->min_participants ?? '-' }}</li>
-                    <li><strong>Afbeelding:</strong> {{ $activity->image ?? '-' }}</li>
-                    <li><strong>Vereisten:</strong> {{ $activity->requirements ?? '-' }}</li>
-                </ul>
-                <div class="flex space-x-4">
-                    <a href="{{ route('activities.edit', $activity) }}" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Bewerk</a>
-                    <form action="{{ route('activities.destroy', $activity) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je deze activiteit wilt verwijderen?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Verwijder</button>
-                    </form>
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white shadow sm:rounded-lg overflow-hidden">
+                
+                <!-- Activity Images -->
+                @if($activity->images->count() > 0 || $activity->image)
+                    <div class="mb-6">
+                        @if($activity->images->count() > 0)
+                            <!-- Multiple uploaded images -->
+                            @if($activity->images->count() === 1)
+                                <img src="{{ $activity->images->first()->url }}" 
+                                     alt="{{ $activity->name }}" 
+                                     class="w-full h-64 object-cover">
+                            @else
+                                <!-- Image gallery for multiple images -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                                    @foreach($activity->images as $image)
+                                        <div class="group cursor-pointer" onclick="openImageModal('{{ $image->url }}', '{{ $image->original_name }}')">
+                                            <img src="{{ $image->url }}" 
+                                                 alt="{{ $image->original_name }}" 
+                                                 class="w-full h-48 object-cover rounded-lg group-hover:opacity-90 transition-opacity">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        @elseif($activity->image)
+                            <!-- Single image from URL field -->
+                            <img src="{{ $activity->image }}" 
+                                 alt="{{ $activity->name }}" 
+                                 class="w-full h-64 object-cover">
+                        @endif
+                    </div>
+                @endif
+
+                <div class="p-8">
+                    <h3 class="text-3xl font-bold mb-6">{{ $activity->name }}</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">📍</span>
+                                <div>
+                                    <strong class="text-gray-700">Locatie:</strong>
+                                    <span class="ml-2">{{ $activity->location }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🕒</span>
+                                <div>
+                                    <strong class="text-gray-700">Starttijd:</strong>
+                                    <span class="ml-2">{{ $activity->start_time->format('d-m-Y H:i') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">🏁</span>
+                                <div>
+                                    <strong class="text-gray-700">Eindtijd:</strong>
+                                    <span class="ml-2">{{ $activity->end_time->format('d-m-Y H:i') }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">💰</span>
+                                <div>
+                                    <strong class="text-gray-700">Kosten:</strong>
+                                    <span class="ml-2">
+                                        @if($activity->cost > 0)
+                                            €{{ number_format($activity->cost, 2, ',', '.') }}
+                                        @else
+                                            Gratis
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            @if($activity->includes_food)
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🍕</span>
+                                    <span>Eten inbegrepen</span>
+                                </div>
+                            @endif
+                            
+                            @if($activity->max_participants)
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">👥</span>
+                                    <div>
+                                        <strong class="text-gray-700">Maximaal aantal deelnemers:</strong>
+                                        <span class="ml-2">{{ $activity->max_participants }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            @if($activity->min_participants)
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">👤</span>
+                                    <div>
+                                        <strong class="text-gray-700">Minimaal aantal deelnemers:</strong>
+                                        <span class="ml-2">{{ $activity->min_participants }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                            
+                            @if($activity->images->count() > 1)
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">📸</span>
+                                    <div>
+                                        <strong class="text-gray-700">Afbeeldingen:</strong>
+                                        <span class="ml-2">{{ $activity->images->count() }} afbeeldingen beschikbaar</span>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    
+                    @if($activity->description)
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold mb-3">Beschrijving</h4>
+                            <p class="text-gray-700 leading-relaxed">{{ $activity->description }}</p>
+                        </div>
+                    @endif
+                    
+                    @if($activity->requirements)
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold mb-3">Vereisten</h4>
+                            <p class="text-gray-700 leading-relaxed">{{ $activity->requirements }}</p>
+                        </div>
+                    @endif
+                    
+                    <div class="flex space-x-4">
+                        <a href="{{ route('activities.edit', $activity) }}" class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors">
+                            Bewerk Activiteit
+                        </a>
+                        <form action="{{ route('activities.destroy', $activity) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je deze activiteit wilt verwijderen?');" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors">
+                                Verwijder Activiteit
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Image Modal for viewing full-size images -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4">
+        <div class="relative max-w-4xl max-h-full">
+            <button onclick="closeImageModal()" class="absolute -top-4 -right-4 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-100 z-10">
+                ×
+            </button>
+            <img id="modalImage" src="" alt="" class="max-w-full max-h-full object-contain rounded-lg">
+        </div>
+    </div>
+
+    <script>
+        function openImageModal(imageUrl, imageName) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('modalImage').alt = imageName;
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal when clicking outside the image
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !document.getElementById('imageModal').classList.contains('hidden')) {
+                closeImageModal();
+            }
+        });
+    </script>
 </x-app-layout>

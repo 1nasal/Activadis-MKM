@@ -21,6 +21,54 @@
                     <article class="bg-white border border-gray-200 p-6 hover:border-gray-300 transition-colors">
                         <div class="flex flex-col md:flex-row gap-6">
                             
+                            <!-- Activity Images with Navigation -->
+                            @if($activity->images->count() > 0 || $activity->primary_image)
+                                <div class="md:w-64 flex-shrink-0 relative">
+                                    @if($activity->images->count() > 1)
+                                        <!-- Image carousel for multiple images -->
+                                        <div class="relative group">
+                                            <div class="image-carousel" id="carousel-{{ $activity->id }}">
+                                                @foreach($activity->images as $index => $image)
+                                                    <img src="{{ $image->url }}" 
+                                                         alt="{{ $image->original_name }}" 
+                                                         class="w-full h-48 object-cover rounded-lg border carousel-image {{ $index === 0 ? '' : 'hidden' }}"
+                                                         data-index="{{ $index }}">
+                                                @endforeach
+                                            </div>
+                                            
+                                            <!-- Navigation buttons -->
+                                            <button onclick="previousImage({{ $activity->id }})" 
+                                                    class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-75">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                                </svg>
+                                            </button>
+                                            <button onclick="nextImage({{ $activity->id }})" 
+                                                    class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-75">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                                </svg>
+                                            </button>
+                                            
+                                            <!-- Image counter -->
+                                            <div class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <span id="counter-{{ $activity->id }}">1</span>/{{ $activity->images->count() }}
+                                            </div>
+                                        </div>
+                                    @elseif($activity->images->count() === 1)
+                                        <!-- Single uploaded image -->
+                                        <img src="{{ $activity->images->first()->url }}" 
+                                             alt="{{ $activity->images->first()->original_name }}" 
+                                             class="w-full h-48 object-cover rounded-lg border">
+                                    @elseif($activity->primary_image)
+                                        <!-- Fallback to URL image -->
+                                        <img src="{{ $activity->primary_image }}" 
+                                             alt="{{ $activity->name }}" 
+                                             class="w-full h-48 object-cover rounded-lg border">
+                                    @endif
+                                </div>
+                            @endif
+                            
                             <div class="md:w-32 flex-shrink-0">
                                 <div class="text-sm text-gray-500 mb-1">
                                     {{ $activity->start_time->format('j M') }}
@@ -143,6 +191,52 @@
 
     <script>
         let selectedActivityId = null;
+        let imageCounters = {};
+
+        // Initialize image counters for activities with multiple images
+        document.addEventListener('DOMContentLoaded', function() {
+            @foreach($activities as $activity)
+                @if($activity->images->count() > 1)
+                    imageCounters[{{ $activity->id }}] = 0;
+                @endif
+            @endforeach
+        });
+
+        function nextImage(activityId) {
+            const carousel = document.getElementById(`carousel-${activityId}`);
+            const images = carousel.querySelectorAll('.carousel-image');
+            const counter = document.getElementById(`counter-${activityId}`);
+            
+            // Hide current image
+            images[imageCounters[activityId]].classList.add('hidden');
+            
+            // Move to next image
+            imageCounters[activityId] = (imageCounters[activityId] + 1) % images.length;
+            
+            // Show next image
+            images[imageCounters[activityId]].classList.remove('hidden');
+            
+            // Update counter
+            counter.textContent = imageCounters[activityId] + 1;
+        }
+
+        function previousImage(activityId) {
+            const carousel = document.getElementById(`carousel-${activityId}`);
+            const images = carousel.querySelectorAll('.carousel-image');
+            const counter = document.getElementById(`counter-${activityId}`);
+            
+            // Hide current image
+            images[imageCounters[activityId]].classList.add('hidden');
+            
+            // Move to previous image
+            imageCounters[activityId] = (imageCounters[activityId] - 1 + images.length) % images.length;
+            
+            // Show previous image
+            images[imageCounters[activityId]].classList.remove('hidden');
+            
+            // Update counter
+            counter.textContent = imageCounters[activityId] + 1;
+        }
 
         function openParticipantModal(activityId) {
             selectedActivityId = activityId;
