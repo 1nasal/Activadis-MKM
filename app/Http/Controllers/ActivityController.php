@@ -14,27 +14,73 @@ class ActivityController extends Controller
     /**
      * Display a listing of activities for users
      */
-    public function home()
+    public function home(Request $request)
     {
-        $activities = Activity::with(['users', 'externals', 'images'])
-            ->where('start_time', '>', now())
-            ->orderBy('start_time', 'asc')
-            ->paginate(12);
+        $sortBy = $request->get('sort', 'start_time');
+        $sortOrder = $request->get('order', 'asc');
         
-        return view('activityList', compact('activities'));
+        $activities = $this->getActivitiesQuery($sortBy, $sortOrder)->paginate(12);
+        
+        // Append query parameters to pagination links
+        $activities->appends($request->query());
+        
+        return view('activityList', compact('activities', 'sortBy', 'sortOrder'));
     }
 
     /**
      * Display listing for activities index (/activities)
      */
-    public function index()
+    public function index(Request $request)
     {
-        $activities = Activity::with(['users', 'externals', 'images'])
-            ->where('start_time', '>', now())
-            ->orderBy('start_time', 'asc')
-            ->paginate(12);
+        $sortBy = $request->get('sort', 'start_time');
+        $sortOrder = $request->get('order', 'asc');
         
-        return view('activity.index', compact('activities'));
+        $activities = $this->getActivitiesQuery($sortBy, $sortOrder)->paginate(12);
+        
+        // Append query parameters to pagination links
+        $activities->appends($request->query());
+        
+        return view('activity.index', compact('activities', 'sortBy', 'sortOrder'));
+    }
+
+    /**
+     * Get activities query with sorting applied
+     */
+    private function getActivitiesQuery($sortBy, $sortOrder)
+    {
+        $query = Activity::with(['users', 'externals', 'images'])
+            ->where('start_time', '>', now());
+
+        // Validate sort parameters - only allow the 3 required sort options
+        $validSortColumns = ['start_time', 'name', 'participants'];
+        $validSortOrders = ['asc', 'desc'];
+
+        if (!in_array($sortBy, $validSortColumns)) {
+            $sortBy = 'start_time';
+        }
+
+        if (!in_array($sortOrder, $validSortOrders)) {
+            $sortOrder = 'asc';
+        }
+
+        // Handle special sorting cases
+        switch ($sortBy) {
+            case 'participants':
+                // Sort by total participant count (users + externals)
+                $query->withCount(['users', 'externals'])
+                      ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
+                break;
+            default:
+                $query->orderBy($sortBy, $sortOrder);
+                
+                // Add secondary sort by start_time for consistent ordering
+                if ($sortBy !== 'start_time') {
+                    $query->orderBy('start_time', 'asc');
+                }
+                break;
+        }
+
+        return $query;
     }
 
     /**
