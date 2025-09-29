@@ -26,20 +26,25 @@ Route::middleware('auth')->group(function () {
     Route::put('users/update/{user}', [UserController::class, 'update'])->name('users.update');
 });
 
-// Activity routes
+// External routes
+Route::post('/externals', [\App\Http\Controllers\ExternalController::class, 'store'])->name('externals.store');
+
 Route::prefix('activities')->name('activities.')->group(function () {
     // Public index route - uses activity.index view
     Route::get('/', [ActivityController::class, 'index'])->name('index');
-    
+
     // Protected routes (auth required)
+    // Moet eigenlijk veranderd worden naar admins only
     Route::middleware('auth')->group(function () {
         Route::get('/create', [ActivityController::class, 'create'])->name('create');
         Route::post('/', [ActivityController::class, 'store'])->name('store');
         Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
         Route::put('/{activity}', [ActivityController::class, 'update'])->name('update');
         Route::delete('/{activity}', [ActivityController::class, 'destroy'])->name('destroy');
+        Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
+        Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('activities.join');
     });
-    
+
     // Show route comes last (dynamic parameter)
     Route::get('/{activity}', [ActivityController::class, 'show'])->name('show');
 });
