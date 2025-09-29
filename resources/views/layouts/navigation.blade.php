@@ -1,136 +1,330 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('home') }}">
-                        <img src="{{ asset('images/logo.svg') }}" alt="Covadis Logo" class="h-8 w-auto" />
-                    </a>
-                </div>
-                
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <!-- New Activiteiten link going to homepage with yellow button styling -->
-                    <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') || request()->is('/') ? 'active' : '' }} flex items-center space-x-2 px-2 py-1 my-2 rounded-md text-white font-medium hover:opacity-90 transition-opacity" style="background-color: #FAA21B;">
-                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                            <polyline points="9,22 9,12 15,12 15,22"/>
-                        </svg>
-                        <span>{{ __('Activiteiten') }}</span>
-                    </a>
-
-                    <!-- Renamed activities.index to "Activiteiten beheren" -->
-
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Mijn activiteiten') }}
-                    </x-nav-link>
-                    
-                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
-                        {{ __('Gebruikers beheren') }}
-                    </x-nav-link>
-
-                                        <x-nav-link :href="route('activities.index')" :active="request()->routeIs('activities.index')">
-                        {{ __('Activiteiten beheren') }}
-                    </x-nav-link>
-
-                </div>
-            </div>
-
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</div>
-
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profiel') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Uitloggen') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-            </div>
-
-            <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+<header class="header">
+    <nav class="nav-container">
+        <a href="{{ route('home') }}" class="logo">
+            <img
+                src="{{ asset('images/logo.svg') }}"
+                alt="Covadis Logo"
+                class="h-8 w-auto"
+            />
+        </a>
+        
+        <ul class="nav-menu" id="nav-menu">
+            <li class="nav-item">
+                <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') || request()->is('/') ? 'active' : '' }}">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9,22 9,12 15,12 15,22"/>
                     </svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
-            <!-- New responsive Activiteiten link going to homepage with yellow button styling -->
-            <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') || request()->is('/') ? 'active' : '' }} flex items-center space-x-2 px-2 py-1 mx-4 my-2 rounded-md text-white font-medium hover:opacity-90 transition-opacity" style="background-color: #FAA21B;">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9,22 9,12 15,12 15,22"/>
-                </svg>
-                <span>{{ __('Activiteiten') }}</span>
-            </a>
-
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Mijn activiteiten') }}
-            </x-responsive-nav-link>
+                    Activiteiten
+                </a>
+            </li>
             
-            <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.index')">
-                {{ __('Gebruikers beheren') }}
-            </x-responsive-nav-link>
-                        <x-responsive-nav-link :href="route('activities.index')" :active="request()->routeIs('activities.index')">
-                {{ __('Activiteiten beheren') }}
-            </x-responsive-nav-link>
+            @auth
+                <li class="nav-item">
+                    <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Mijn Activiteiten
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Gebruikers beheren
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('activities.index') }}" class="nav-link {{ request()->routeIs('activities.index') ? 'active' : '' }}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                            <line x1="16" x2="16" y1="2" y2="6"/>
+                            <line x1="8" x2="8" y1="2" y2="6"/>
+                            <line x1="3" x2="21" y1="10" y2="10"/>
+                        </svg>
+                        Activiteiten beheren
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->routeIs('profile.edit') ? 'active' : '' }}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Profiel
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                        @csrf
+                        <button type="submit" class="nav-link logout-button">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16,17 21,12 16,7"/>
+                                <line x1="21" x2="9" y1="12" y2="12"/>
+                            </svg>
+                            Uitloggen
+                        </button>
+                    </form>
+                </li>
+            @else
+                <li class="nav-item">
+                    <a href="{{ route('login') }}" class="nav-link {{ request()->routeIs('login') ? 'active' : '' }}">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                            <polyline points="10,17 15,12 10,7"/>
+                            <line x1="15" x2="3" y1="12" y2="12"/>
+                        </svg>
+                        Login
+                    </a>
+                </li>
+            @endauth
+        </ul>
+
+        <div class="mobile-toggle" id="mobile-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
         </div>
+    </nav>
+</header>
 
-        <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
+<style>
+    .header {
+        background: #ffffff;
+        color: #1f2937;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
 
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profiel') }}
-                </x-responsive-nav-link>
+    .nav-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 64px;
+    }
 
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
+    .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #111827;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
 
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Uitloggen') }}
-                    </x-responsive-nav-link>
-                </form>
-            </div>
-        </div>
-    </div>
-</nav>
+    .logo:hover {
+        color: #3b82f6;
+    }
+
+    .nav-menu {
+        display: flex;
+        list-style: none;
+        gap: 0.5rem;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    .nav-item {
+        position: relative;
+    }
+
+    .nav-link {
+        color: #6b7280;
+        text-decoration: none;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .nav-link:hover {
+        background-color: #f3f4f6;
+        color: #111827;
+    }
+
+    .nav-link.active {
+        background-color: #FAA21B;
+        color: white;
+    }
+
+    .logout-form {
+        margin: 0;
+    }
+
+    .logout-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: inherit;
+        color: #6b7280;
+        text-decoration: none;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        width: 100%;
+    }
+
+    .logout-button:hover {
+        background-color: #f3f4f6;
+        color: #111827;
+    }
+
+    .mobile-toggle {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+    }
+
+    .mobile-toggle:hover {
+        background-color: #f3f4f6;
+    }
+
+    .mobile-toggle span {
+        width: 20px;
+        height: 2px;
+        background-color: #6b7280;
+        margin: 2px 0;
+        transition: 0.3s;
+        border-radius: 1px;
+    }
+
+    .mobile-toggle.active span:nth-child(1) {
+        transform: rotate(-45deg) translate(-4px, 5px);
+        background-color: #111827;
+    }
+
+    .mobile-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-toggle.active span:nth-child(3) {
+        transform: rotate(45deg) translate(-4px, -5px);
+        background-color: #111827;
+    }
+
+    .icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .mobile-toggle {
+            display: flex;
+        }
+
+        .nav-menu {
+            position: fixed;
+            left: -100%;
+            top: 64px;
+            flex-direction: column;
+            background: #ffffff;
+            width: 100%;
+            text-align: center;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            gap: 0;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .nav-menu.active {
+            left: 0;
+        }
+
+        .nav-item {
+            margin: 0.25rem 0;
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .nav-link, .logout-button {
+            padding: 1rem;
+            justify-content: center;
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .nav-container {
+            padding: 0 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .nav-container {
+            height: 60px;
+            padding: 0 1rem;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+        }
+
+        .nav-menu {
+            top: 60px;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mobileToggle = document.getElementById('mobile-toggle');
+    const navMenu = document.getElementById('nav-menu');
+
+    if (mobileToggle && navMenu) {
+        mobileToggle.addEventListener('click', function() {
+            mobileToggle.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+
+        const navLinks = document.querySelectorAll('.nav-link, .logout-button');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileToggle.classList.remove('active');
+                navMenu.classList.remove('active');
+            });
+        });
+
+        document.addEventListener('click', function(event) {
+            const isClickInsideNav = navMenu.contains(event.target);
+            const isClickOnToggle = mobileToggle.contains(event.target);
+            
+            if (!isClickInsideNav && !isClickOnToggle && navMenu.classList.contains('active')) {
+                mobileToggle.classList.remove('active');
+                navMenu.classList.remove('active');
+            }
+        });
+    }
+});
+</script>
