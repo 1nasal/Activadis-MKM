@@ -18,12 +18,12 @@ class ActivityController extends Controller
     {
         $sortBy = $request->get('sort', 'start_time');
         $sortOrder = $request->get('order', 'asc');
-        
+
         $activities = $this->getActivitiesQuery($sortBy, $sortOrder)->paginate(12);
-        
+
         // Append query parameters to pagination links
         $activities->appends($request->query());
-        
+
         return view('activityList', compact('activities', 'sortBy', 'sortOrder'));
     }
 
@@ -34,12 +34,12 @@ class ActivityController extends Controller
     {
         $sortBy = $request->get('sort', 'start_time');
         $sortOrder = $request->get('order', 'asc');
-        
+
         $activities = $this->getActivitiesQuery($sortBy, $sortOrder)->paginate(12);
-        
+
         // Append query parameters to pagination links
         $activities->appends($request->query());
-        
+
         return view('activity.index', compact('activities', 'sortBy', 'sortOrder'));
     }
 
@@ -72,7 +72,7 @@ class ActivityController extends Controller
                 break;
             default:
                 $query->orderBy($sortBy, $sortOrder);
-                
+
                 // Add secondary sort by start_time for consistent ordering
                 if ($sortBy !== 'start_time') {
                     $query->orderBy('start_time', 'asc');
@@ -127,7 +127,7 @@ class ActivityController extends Controller
     public function show(Activity $activity)
     {
         $activity->load(['users', 'externals', 'images']);
-        
+
         return view('activity.show', compact('activity'));
     }
 
@@ -186,7 +186,7 @@ class ActivityController extends Controller
         foreach ($activity->images as $image) {
             Storage::disk('public')->delete($image->path);
         }
-        
+
         $activity->delete();
 
         return redirect()->route('activities.index')->with('success', 'Activiteit succesvol verwijderd!');
@@ -221,10 +221,23 @@ class ActivityController extends Controller
     private function removeImages(array $imageIds): void
     {
         $images = ActivityImage::whereIn('id', $imageIds)->get();
-        
+
         foreach ($images as $image) {
             Storage::disk('public')->delete($image->path);
             $image->delete();
         }
+    }
+
+    public function join(Activity $activity)
+    {
+        $user = auth()->user();
+
+        if ($activity->participants()->where('user_id', $user->id)->exists()) {
+            return back()->with('error', 'Je neemt al deel aan deze activiteit.');
+        }
+
+        $activity->participants()->attach($user->id);
+
+        return back()->with('success', 'Je doet nu mee aan de activiteit!');
     }
 }
