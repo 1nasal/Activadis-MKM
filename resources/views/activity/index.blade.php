@@ -13,57 +13,27 @@
                         {{ __("Activiteit aanmaken") }}
                     </x-link-button>
 
-                    <div class="overflow-x-auto mt-6">
+                    <div class="mt-6">
                         @if($activities->count())
-                            <table class="min-w-full divide-y divide-gray-300">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Naam
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Locatie
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Starttijd
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Eindtijd
-                                        </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Acties
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white">
-                                    @foreach($activities as $activity)
-                                        <tr>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $activity->name }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $activity->location }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $activity->start_time }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {{ $activity->end_time }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 space-x-2">
-                                                <x-link-button href="{{ route('activities.show', $activity) }}">
-                                                    Meer weergeven
-                                                </x-link-button>
-                                                <x-link-button href="{{ route('activities.edit', $activity) }}" class="bg-yellow-600 hover:bg-yellow-700">
-                                                    Bewerken
-                                                </x-link-button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            <ul class="space-y-3">
+                                @foreach($activities as $activity)
+                                    <li>
+                                        <a href="{{ route('activities.show', $activity) }}" 
+                                           class="block px-6 py-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition duration-200 ease-in-out shadow-sm hover:shadow-md">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-base font-semibold text-gray-900">
+                                                    {{ $activity->name }}
+                                                </span>
+                                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                </svg>
+                                            </div>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
                         @else
-                            <div class="px-6 py-4 text-sm text-gray-500">
+                            <div class="px-6 py-8 text-center text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
                                 Er zijn nog geen activiteiten.
                             </div>
                         @endif

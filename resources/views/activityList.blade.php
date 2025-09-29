@@ -7,12 +7,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50">
-    <x-header />
+    @include('layouts.navigation')
 
-    <div class="max-w-6xl mx-auto py-8">
+    <div class="max-w-6xl mx-auto py-8 px-4">
         <header class="mb-6">
             <h1 class="text-2xl font-bold text-gray-800 mb-3">Aankomende Activiteiten</h1>
-            <p class="text-gray-600">Overzicht van alle geplande activiteiten</p>
         </header>
 
         <!-- Compacte Sorting Controls -->
@@ -189,7 +188,15 @@
                                 </div>
 
                                 <p class="text-gray-700 text-sm leading-relaxed mb-4">
-                                    {{ $activity->description }}
+                                    @php
+                                        $maxLength = 150;
+                                        $description = $activity->description;
+                                        if (strlen($description) > $maxLength) {
+                                            $description = substr($description, 0, $maxLength);
+                                            $description = substr($description, 0, strrpos($description, ' ')) . '...';
+                                        }
+                                    @endphp
+                                    {{ $description }}
                                 </p>
                             </div>
 
@@ -243,7 +250,6 @@
             </div>
             
             <div class="p-6">
-                <!-- Modal content will be populated by JavaScript -->
                 <div id="modalContent"></div>
                 
                 <div class="mt-6 flex gap-4">
@@ -296,7 +302,7 @@
         </div>
     </div>
 
-    <!-- Image Modal for viewing full-size images -->
+    <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center p-4">
         <div class="relative max-w-4xl max-h-full">
             <button onclick="closeImageModal()" class="absolute -top-4 -right-4 bg-white text-black rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-100 z-10">
@@ -311,9 +317,7 @@
         let imageCounters = {};
         let activitiesData = {};
 
-        // Initialize data and image counters
         document.addEventListener('DOMContentLoaded', function() {
-            // Store activities data for modal use
             @foreach($activities as $activity)
                 activitiesData[{{ $activity->id }}] = {
                     id: {{ $activity->id }},
@@ -329,10 +333,7 @@
                     min_participants: {{ $activity->min_participants ?? 'null' }},
                     images: [
                         @foreach($activity->images as $image)
-                            {
-                                url: @json($image->url),
-                                name: @json($image->original_name)
-                            },
+                            { url: @json($image->url), name: @json($image->original_name) },
                         @endforeach
                     ],
                     primary_image: @json($activity->primary_image),
@@ -344,7 +345,6 @@
                 @endif
             @endforeach
 
-            // Sort dropdown functionality
             const sortButton = document.getElementById('sortDropdownButton');
             const sortMenu = document.getElementById('sortDropdownMenu');
 
@@ -353,14 +353,12 @@
                 sortMenu.classList.toggle('hidden');
             });
 
-            // Close dropdown when clicking outside
             document.addEventListener('click', function(e) {
                 if (!sortButton.contains(e.target) && !sortMenu.contains(e.target)) {
                     sortMenu.classList.add('hidden');
                 }
             });
 
-            // Close dropdown when pressing escape
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     sortMenu.classList.add('hidden');
@@ -373,16 +371,9 @@
             const images = carousel.querySelectorAll('.carousel-image');
             const counter = document.getElementById(`counter-${activityId}`);
             
-            // Hide current image
             images[imageCounters[activityId]].classList.add('hidden');
-            
-            // Move to next image
             imageCounters[activityId] = (imageCounters[activityId] + 1) % images.length;
-            
-            // Show next image
             images[imageCounters[activityId]].classList.remove('hidden');
-            
-            // Update counter
             counter.textContent = imageCounters[activityId] + 1;
         }
 
@@ -391,16 +382,9 @@
             const images = carousel.querySelectorAll('.carousel-image');
             const counter = document.getElementById(`counter-${activityId}`);
             
-            // Hide current image
             images[imageCounters[activityId]].classList.add('hidden');
-            
-            // Move to previous image
             imageCounters[activityId] = (imageCounters[activityId] - 1 + images.length) % images.length;
-            
-            // Show previous image
             images[imageCounters[activityId]].classList.remove('hidden');
-            
-            // Update counter
             counter.textContent = imageCounters[activityId] + 1;
         }
 
@@ -409,14 +393,10 @@
             if (!activity) return;
 
             selectedActivityId = activityId;
-            
-            // Set modal title
             document.getElementById('modalActivityTitle').textContent = activity.name;
             
-            // Create modal content
             let modalContent = '';
             
-            // Images section
             if (activity.images.length > 0 || activity.primary_image) {
                 modalContent += '<div class="mb-6">';
                 if (activity.images.length > 0) {
@@ -425,11 +405,9 @@
                     } else {
                         modalContent += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
                         activity.images.forEach(image => {
-                            modalContent += `
-                                <div class="group cursor-pointer" onclick="openImageModal('${image.url}', '${image.name}')">
-                                    <img src="${image.url}" alt="${image.name}" class="w-full h-48 object-cover rounded-lg group-hover:opacity-90 transition-opacity">
-                                </div>
-                            `;
+                            modalContent += `<div class="group cursor-pointer" onclick="openImageModal('${image.url}', '${image.name}')">
+                                <img src="${image.url}" alt="${image.name}" class="w-full h-48 object-cover rounded-lg group-hover:opacity-90 transition-opacity">
+                            </div>`;
                         });
                         modalContent += '</div>';
                     }
@@ -439,74 +417,44 @@
                 modalContent += '</div>';
             }
             
-            // Details grid
             modalContent += '<div class="grid md:grid-cols-2 gap-8 mb-8">';
-            
-            // Left column
             modalContent += '<div class="space-y-4">';
-            modalContent += `<div>
-                <strong class="text-gray-700">Locatie:</strong> <span class="ml-2">${activity.location}</span>
-            </div>`;
-            
-            modalContent += `<div>
-                <strong class="text-gray-700">Starttijd:</strong> <span class="ml-2">${activity.start_time}</span>
-            </div>`;
+            modalContent += `<div><strong class="text-gray-700">Locatie:</strong> <span class="ml-2">${activity.location}</span></div>`;
+            modalContent += `<div><strong class="text-gray-700">Starttijd:</strong> <span class="ml-2">${activity.start_time}</span></div>`;
             
             if (activity.end_time) {
-                modalContent += `<div>
-                    <strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span>
-                </div>`;
+                modalContent += `<div><strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span></div>`;
             }
             
-            modalContent += `<div>
-                <strong class="text-gray-700">Kosten:</strong> <span class="ml-2">${activity.cost > 0 ? '€' + activity.cost.toFixed(2).replace('.', ',') : 'Gratis'}</span>
-            </div>`;
+            modalContent += `<div><strong class="text-gray-700">Kosten:</strong> <span class="ml-2">${activity.cost > 0 ? '€' + activity.cost.toFixed(2).replace('.', ',') : 'Gratis'}</span></div>`;
             modalContent += '</div>';
             
-            // Right column
             modalContent += '<div class="space-y-4">';
             if (activity.includes_food) {
                 modalContent += `<div>Eten inbegrepen</div>`;
             }
             
             if (activity.max_participants) {
-                modalContent += `<div>
-                    <strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span>
-                </div>`;
+                modalContent += `<div><strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span></div>`;
             }
             
             if (activity.min_participants) {
-                modalContent += `<div>
-                    <strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span>
-                </div>`;
+                modalContent += `<div><strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span></div>`;
             }
             
-            modalContent += `<div>
-                <strong class="text-gray-700">Huidige deelnemers:</strong> <span class="ml-2">${activity.total_participants}</span>
-            </div>`;
+            modalContent += `<div><strong class="text-gray-700">Huidige deelnemers:</strong> <span class="ml-2">${activity.total_participants}</span></div>`;
+            modalContent += '</div></div>';
             
-            modalContent += '</div>';
-            modalContent += '</div>';
-            
-            // Description
             if (activity.description) {
-                modalContent += `<div class="mb-8">
-                    <h4 class="text-xl font-semibold mb-3">Beschrijving</h4>
-                    <p class="text-gray-700 leading-relaxed">${activity.description}</p>
-                </div>`;
+                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Beschrijving</h4><p class="text-gray-700 leading-relaxed">${activity.description}</p></div>`;
             }
             
-            // Requirements
             if (activity.requirements) {
-                modalContent += `<div class="mb-8">
-                    <h4 class="text-xl font-semibold mb-3">Vereisten</h4>
-                    <p class="text-gray-700 leading-relaxed">${activity.requirements}</p>
-                </div>`;
+                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Vereisten</h4><p class="text-gray-700 leading-relaxed">${activity.requirements}</p></div>`;
             }
             
             document.getElementById('modalContent').innerHTML = modalContent;
             
-            // Update join button
             const joinButton = document.getElementById('modalJoinButton');
             const isFull = activity.max_participants && activity.total_participants >= activity.max_participants;
             
@@ -545,25 +493,18 @@
         function closeParticipantModal() {
             document.getElementById('participantModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
-            // Don't reset selectedActivityId here if we came from the detail modal
         }
 
         function selectParticipantType(type) {
             if (type === 'employee') {
-                // Check if user is logged in
                 @auth
-                    // User is logged in as employee, handle participation
                     console.log('Employee participation for activity:', selectedActivityId);
-                    // TODO: Add employee participation logic here
                     alert('Functionaliteit voor medewerkers wordt binnenkort toegevoegd!');
                 @else
-                    // User is not logged in, redirect to login
                     window.location.href = '{{ route("login") }}';
                 @endauth
             } else if (type === 'external') {
-                // Handle external participation
                 console.log('External participation for activity:', selectedActivityId);
-                // TODO: Add external participation logic here
                 alert('Functionaliteit voor externe deelnemers wordt binnenkort toegevoegd!');
             }
             
@@ -582,7 +523,6 @@
             document.body.style.overflow = 'auto';
         }
 
-        // Close modals when clicking outside
         document.getElementById('activityModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeActivityModal();
@@ -601,7 +541,6 @@
             }
         });
 
-        // Close modals with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 if (!document.getElementById('activityModal').classList.contains('hidden')) {

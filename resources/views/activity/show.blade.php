@@ -44,80 +44,58 @@
                     
                     <div class="grid md:grid-cols-2 gap-8 mb-8">
                         <div class="space-y-4">
-                            <div class="flex items-center space-x-3">
-                                <span class="text-2xl">📍</span>
-                                <div>
-                                    <strong class="text-gray-700">Locatie:</strong>
-                                    <span class="ml-2">{{ $activity->location }}</span>
-                                </div>
+                            <div>
+                                <strong class="text-gray-700">Locatie:</strong>
+                                <span class="ml-2">{{ $activity->location }}</span>
                             </div>
                             
-                            <div class="flex items-center space-x-3">
-                                <span class="text-2xl">🕒</span>
-                                <div>
-                                    <strong class="text-gray-700">Starttijd:</strong>
-                                    <span class="ml-2">{{ $activity->start_time->format('d-m-Y H:i') }}</span>
-                                </div>
+                            <div>
+                                <strong class="text-gray-700">Starttijd:</strong>
+                                <span class="ml-2">{{ $activity->start_time->format('d-m-Y H:i') }}</span>
                             </div>
                             
-                            <div class="flex items-center space-x-3">
-                                <span class="text-2xl">🏁</span>
-                                <div>
-                                    <strong class="text-gray-700">Eindtijd:</strong>
-                                    <span class="ml-2">{{ $activity->end_time->format('d-m-Y H:i') }}</span>
-                                </div>
+                            <div>
+                                <strong class="text-gray-700">Eindtijd:</strong>
+                                <span class="ml-2">{{ $activity->end_time->format('d-m-Y H:i') }}</span>
                             </div>
                             
-                            <div class="flex items-center space-x-3">
-                                <span class="text-2xl">💰</span>
-                                <div>
-                                    <strong class="text-gray-700">Kosten:</strong>
-                                    <span class="ml-2">
-                                        @if($activity->cost > 0)
-                                            €{{ number_format($activity->cost, 2, ',', '.') }}
-                                        @else
-                                            Gratis
-                                        @endif
-                                    </span>
-                                </div>
+                            <div>
+                                <strong class="text-gray-700">Kosten:</strong>
+                                <span class="ml-2">
+                                    @if($activity->cost > 0)
+                                        €{{ number_format($activity->cost, 2, ',', '.') }}
+                                    @else
+                                        Gratis
+                                    @endif
+                                </span>
                             </div>
                         </div>
                         
                         <div class="space-y-4">
                             @if($activity->includes_food)
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">🍕</span>
+                                <div>
                                     <span>Eten inbegrepen</span>
                                 </div>
                             @endif
                             
                             @if($activity->max_participants)
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">👥</span>
-                                    <div>
-                                        <strong class="text-gray-700">Maximaal aantal deelnemers:</strong>
-                                        <span class="ml-2">{{ $activity->max_participants }}</span>
-                                    </div>
+                                <div>
+                                    <strong class="text-gray-700">Maximaal aantal deelnemers:</strong>
+                                    <span class="ml-2">{{ $activity->max_participants }}</span>
                                 </div>
                             @endif
                             
                             @if($activity->min_participants)
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">👤</span>
-                                    <div>
-                                        <strong class="text-gray-700">Minimaal aantal deelnemers:</strong>
-                                        <span class="ml-2">{{ $activity->min_participants }}</span>
-                                    </div>
+                                <div>
+                                    <strong class="text-gray-700">Minimaal aantal deelnemers:</strong>
+                                    <span class="ml-2">{{ $activity->min_participants }}</span>
                                 </div>
                             @endif
                             
                             @if($activity->images->count() > 1)
-                                <div class="flex items-center space-x-3">
-                                    <span class="text-2xl">📸</span>
-                                    <div>
-                                        <strong class="text-gray-700">Afbeeldingen:</strong>
-                                        <span class="ml-2">{{ $activity->images->count() }} afbeeldingen beschikbaar</span>
-                                    </div>
+                                <div>
+                                    <strong class="text-gray-700">Afbeeldingen:</strong>
+                                    <span class="ml-2">{{ $activity->images->count() }} afbeeldingen beschikbaar</span>
                                 </div>
                             @endif
                         </div>
