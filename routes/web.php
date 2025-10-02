@@ -42,8 +42,8 @@ Route::prefix('activities')->name('activities.')->group(function () {
         Route::put('/{activity}', [ActivityController::class, 'update'])->name('update');
         Route::delete('/{activity}', [ActivityController::class, 'destroy'])->name('destroy');
         Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
-        Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('activities.join');
     });
+    Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('join');
 
     // Show route comes last (dynamic parameter)
     Route::get('/{activity}', [ActivityController::class, 'show'])->name('show');

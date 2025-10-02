@@ -228,16 +228,38 @@ class ActivityController extends Controller
         }
     }
 
-    public function join(Activity $activity)
+    public function join(Request $request, Activity $activity)
     {
+        if (auth()->guest()) {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+            ]);
+
+            $external = \App\Models\External::firstOrCreate(
+                ['email' => $validated['email']],
+                [
+                    'first_name' => $validated['first_name'],
+                    'last_name' => $validated['last_name'],
+                ]
+            );
+
+            if ($activity->externals()->where('external_id', $external->id)->exists()) {
+                return back()->with('error', 'Je hebt al deelgenomen aan deze activiteit als externe.');
+            }
+
+            $activity->externals()->attach($external->id);
+            return back()->with('success', 'Je neemt nu deel aan de activiteit!');
+        }
+
         $user = auth()->user();
 
-        if ($activity->participants()->where('user_id', $user->id)->exists()) {
+        if ($activity->users()->where('user_id', $user->id)->exists()) {
             return back()->with('error', 'Je neemt al deel aan deze activiteit.');
         }
 
-        $activity->participants()->attach($user->id);
-
-        return back()->with('success', 'Je doet nu mee aan de activiteit!');
+        $activity->users()->attach($user->id);
+        return back()->with('success', 'Je neemt nu deel aan de activiteit!');
     }
 }
