@@ -230,20 +230,20 @@
                 {{ $activities->links() }}
             </div>
         @else
-<div class="text-center py-16">
-    <div class="text-gray-400 mb-4">
-        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-        </svg>
-    </div>
-    <h3 class="text-lg font-medium text-gray-900 mb-2">Geen activiteiten gevonden</h3>
-    <p class="text-gray-600">Er zijn momenteel geen aankomende activiteiten met de huidige sortering.</p>
-    @if(request()->has('sort') || request()->has('order'))
-        <a href="{{ url()->current() }}" class="inline-block mt-4 text-blue-600 hover:text-blue-800 underline">
-            Reset sortering om alle activiteiten te bekijken
-        </a>
-    @endif
-</div>
+            <div class="text-center py-16">
+                <div class="text-gray-400 mb-4">
+                    <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Geen activiteiten gevonden</h3>
+                <p class="text-gray-600">Er zijn momenteel geen aankomende activiteiten met de huidige sortering.</p>
+                @if(request()->has('sort') || request()->has('order'))
+                    <a href="{{ url()->current() }}" class="inline-block mt-4 text-blue-600 hover:text-blue-800 underline">
+                        Reset sortering om alle activiteiten te bekijken
+                    </a>
+                @endif
+            </div>
         @endif
     </div>
 
@@ -518,14 +518,6 @@
             document.getElementById('activityModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
             selectedActivityId = null;
-        }
-
-        function openParticipantModal(activityId) {
-            selectedActivityId = activityId;
-            const form = document.getElementById('participantForm');
-            form.action = `/activities/${activityId}/join`;
-            document.getElementById('participantModal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
         }
 
 function openParticipantModalFromDetail() {
