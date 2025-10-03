@@ -335,65 +335,44 @@
         </div>
     </div>
 
-    @push('scripts')
-    <script>
+  <script>
         let selectedActivityId = null;
         let imageCounters = {};
         let activitiesData = {};
 
-        document.addEventListener('DOMContentLoaded', function () {
-            @foreach($activities as $activity)
-            activitiesData[{{ $activity->id }}] = {
-                id: {{ $activity->id }},
-                name: @json($activity->name),
-                description: @json($activity->description),
-                requirements: @json($activity->requirements),
-                location: @json($activity->location),
-                start_time: @json($activity->start_time->format('d-m-Y H:i')),
-                end_time: @json($activity->end_time ? $activity->end_time->format('d-m-Y H:i') : null),
-                cost: {{ $activity->cost }},
-                includes_food: {{ $activity->includes_food ? 'true' : 'false' }},
-                max_participants: {{ $activity->max_participants ?? 'null' }},
-                min_participants: {{ $activity->min_participants ?? 'null' }},
-                images: [
-                        @foreach($activity->images as $image)
-                    {
-                        url: @json($image->url),
-                        name: @json($image->original_name)
-                    },
-                    @endforeach
-                ],
-                primary_image: @json($activity->primary_image),
-                total_participants: {{ $activity->users->count() + $activity->externals->count() }}
-            };
+        // Initialize data immediately
+        @foreach($activities as $activity)
+        activitiesData[{{ $activity->id }}] = {
+            id: {{ $activity->id }},
+            name: @json($activity->name),
+            description: @json($activity->description),
+            requirements: @json($activity->requirements),
+            location: @json($activity->location),
+            start_time: @json($activity->start_time->format('d-m-Y H:i')),
+            end_time: @json($activity->end_time ? $activity->end_time->format('d-m-Y H:i') : null),
+            cost: {{ $activity->cost }},
+            includes_food: {{ $activity->includes_food ? 'true' : 'false' }},
+            max_participants: {{ $activity->max_participants ?? 'null' }},
+            min_participants: {{ $activity->min_participants ?? 'null' }},
+            images: [
+                    @foreach($activity->images as $image)
+                {
+                    url: @json($image->url),
+                    name: @json($image->original_name)
+                },
+                @endforeach
+            ],
+            primary_image: @json($activity->primary_image),
+            total_participants: {{ $activity->users->count() + $activity->externals->count() }}
+        };
 
-            @if($activity->images->count() > 1)
-            imageCounters[{{ $activity->id }}] = 0;
-            @endif
-            @endforeach
+        @if($activity->images->count() > 1)
+        imageCounters[{{ $activity->id }}] = 0;
+        @endif
+        @endforeach
 
-            const sortButton = document.getElementById('sortDropdownButton');
-            const sortMenu = document.getElementById('sortDropdownMenu');
-
-            sortButton.addEventListener('click', function (e) {
-                e.stopPropagation();
-                sortMenu.classList.toggle('hidden');
-            });
-
-            document.addEventListener('click', function (e) {
-                if (!sortButton.contains(e.target) && !sortMenu.contains(e.target)) {
-                    sortMenu.classList.add('hidden');
-                }
-            });
-
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') {
-                    sortMenu.classList.add('hidden');
-                }
-            });
-        });
-
-        function joinActivityDirectly(activityId) {
+        // Define all functions globally BEFORE DOMContentLoaded
+        window.joinActivityDirectly = function(activityId) {
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/activities/${activityId}/join`;
@@ -406,9 +385,9 @@
 
             document.body.appendChild(form);
             form.submit();
-        }
+        };
 
-        function nextImage(activityId) {
+        window.nextImage = function(activityId) {
             const carousel = document.getElementById(`carousel-${activityId}`);
             const images = carousel.querySelectorAll('.carousel-image');
             const counter = document.getElementById(`counter-${activityId}`);
@@ -417,9 +396,9 @@
             imageCounters[activityId] = (imageCounters[activityId] + 1) % images.length;
             images[imageCounters[activityId]].classList.remove('hidden');
             counter.textContent = imageCounters[activityId] + 1;
-        }
+        };
 
-        function previousImage(activityId) {
+        window.previousImage = function(activityId) {
             const carousel = document.getElementById(`carousel-${activityId}`);
             const images = carousel.querySelectorAll('.carousel-image');
             const counter = document.getElementById(`counter-${activityId}`);
@@ -428,9 +407,9 @@
             imageCounters[activityId] = (imageCounters[activityId] - 1 + images.length) % images.length;
             images[imageCounters[activityId]].classList.remove('hidden');
             counter.textContent = imageCounters[activityId] + 1;
-        }
+        };
 
-        function openActivityModal(activityId) {
+        window.openActivityModal = function(activityId) {
             const activity = activitiesData[activityId];
             if (!activity) return;
 
@@ -512,15 +491,23 @@
 
             document.getElementById('activityModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-        }
+        };
 
-        function closeActivityModal() {
+        window.closeActivityModal = function() {
             document.getElementById('activityModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
             selectedActivityId = null;
-        }
+        };
 
-function openParticipantModalFromDetail() {
+        window.openParticipantModal = function(activityId) {
+            selectedActivityId = activityId;
+            const form = document.getElementById('participantForm');
+            form.action = `/activities/${activityId}/join`;
+            document.getElementById('participantModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.openParticipantModalFromDetail = function() {
             if (!selectedActivityId) return;
 
             @auth
@@ -528,70 +515,81 @@ function openParticipantModalFromDetail() {
             @else
             openParticipantModal(selectedActivityId);
             @endauth
-        }
+        };
 
-        function closeParticipantModal() {
+        window.closeParticipantModal = function() {
             document.getElementById('participantModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
-        }
+        };
 
-        function selectParticipantType(type) {
-            if (type === 'employee') {
-                @auth
-                console.log('Employee participation for activity:', selectedActivityId);
-                alert('Functionaliteit voor medewerkers wordt binnenkort toegevoegd!');
-                @else
-                window.location.href = '{{ route("login") }}';
-                @endauth
-            } else if (type === 'external') {
-                console.log('External participation for activity:', selectedActivityId);
-                alert('Functionaliteit voor externe deelnemers wordt binnenkort toegevoegd!');
-            }
-
-            closeParticipantModal();
-        }
-
-        function openImageModal(imageUrl, imageName) {
+        window.openImageModal = function(imageUrl, imageName) {
             document.getElementById('modalImage').src = imageUrl;
             document.getElementById('modalImage').alt = imageName;
             document.getElementById('imageModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
-        }
+        };
 
-        function closeImageModal() {
+        window.closeImageModal = function() {
             document.getElementById('imageModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
-        }
+        };
 
-        document.getElementById('activityModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeActivityModal();
+        // DOM ready event listeners
+        document.addEventListener('DOMContentLoaded', function () {
+            const sortButton = document.getElementById('sortDropdownButton');
+            const sortMenu = document.getElementById('sortDropdownMenu');
+
+            if (sortButton && sortMenu) {
+                sortButton.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    sortMenu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (!sortButton.contains(e.target) && !sortMenu.contains(e.target)) {
+                        sortMenu.classList.add('hidden');
+                    }
+                });
             }
-        });
 
-        document.getElementById('participantModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeParticipantModal();
+            // Modal event listeners
+            const activityModal = document.getElementById('activityModal');
+            const participantModal = document.getElementById('participantModal');
+            const imageModal = document.getElementById('imageModal');
+
+            if (activityModal) {
+                activityModal.addEventListener('click', function (e) {
+                    if (e.target === this) closeActivityModal();
+                });
             }
-        });
 
-        document.getElementById('imageModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeImageModal();
+            if (participantModal) {
+                participantModal.addEventListener('click', function (e) {
+                    if (e.target === this) closeParticipantModal();
+                });
             }
-        });
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') {
-                if (!document.getElementById('activityModal').classList.contains('hidden')) {
-                    closeActivityModal();
-                } else if (!document.getElementById('participantModal').classList.contains('hidden')) {
-                    closeParticipantModal();
-                } else if (!document.getElementById('imageModal').classList.contains('hidden')) {
-                    closeImageModal();
+            if (imageModal) {
+                imageModal.addEventListener('click', function (e) {
+                    if (e.target === this) closeImageModal();
+                });
+            }
+
+            // Keyboard event listeners
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    if (activityModal && !activityModal.classList.contains('hidden')) {
+                        closeActivityModal();
+                    } else if (participantModal && !participantModal.classList.contains('hidden')) {
+                        closeParticipantModal();
+                    } else if (imageModal && !imageModal.classList.contains('hidden')) {
+                        closeImageModal();
+                    } else {
+                        const sortMenu = document.getElementById('sortDropdownMenu');
+                        if (sortMenu) sortMenu.classList.add('hidden');
+                    }
                 }
-            }
+            });
         });
     </script>
-    @endpush
 </x-app-layout>
