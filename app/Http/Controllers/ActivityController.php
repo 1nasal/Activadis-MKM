@@ -8,6 +8,8 @@ use App\Models\ActivityImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Mail\ActivityJoinedMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 
 class ActivityController extends Controller
@@ -252,6 +254,9 @@ class ActivityController extends Controller
             }
 
             $activity->externals()->attach($external->id);
+
+            Mail::to($external->email)->send(new ActivityJoinedMail($activity, $external->first_name));
+
             return back()->with('success', 'Je neemt nu deel aan de activiteit!');
         }
 
@@ -262,6 +267,9 @@ class ActivityController extends Controller
         }
 
         $activity->users()->attach($user->id);
+
+        Mail::to($user->email)->send(new ActivityJoinedMail($activity, $user->first_name));
+
         return back()->with('success', 'Je neemt nu deel aan de activiteit!');
     }
 }
