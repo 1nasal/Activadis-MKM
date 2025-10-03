@@ -33,18 +33,42 @@ class ActivityController extends Controller
     /**
      * Display listing for activities index (/activities)
      */
-    public function index(Request $request)
-    {
-        $sortBy = $request->get('sort', 'start_time');
-        $sortOrder = $request->get('order', 'asc');
+public function index(Request $request)
+{
+    $sortBy = $request->get('sort', 'start_time');
+    $sortOrder = $request->get('order', 'desc'); // Changed default to desc for recent first
 
-        $activities = $this->getActivitiesQuery($sortBy, $sortOrder)->paginate(12);
+    // Get all activities (both past and upcoming)
+    $query = Activity::with(['users', 'externals', 'images']);
 
-        // Append query parameters to pagination links
-        $activities->appends($request->query());
+    // Validate sort parameters
+    $validSortColumns = ['start_time', 'name', 'participants'];
+    $validSortOrders = ['asc', 'desc'];
 
-        return view('activity.index', compact('activities', 'sortBy', 'sortOrder'));
+    if (!in_array($sortBy, $validSortColumns)) {
+        $sortBy = 'start_time';
     }
+
+    if (!in_array($sortOrder, $validSortOrders)) {
+        $sortOrder = 'desc';
+    }
+
+    // Handle special sorting cases
+    switch ($sortBy) {
+        case 'participants':
+            $query->withCount(['users', 'externals'])
+                  ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
+            break;
+        default:
+            $query->orderBy($sortBy, $sortOrder);
+            break;
+    }
+
+    $activities = $query->paginate(12);
+    $activities->appends($request->query());
+
+    return view('activity.index', compact('activities', 'sortBy', 'sortOrder'));
+}
 
     /**
      * Get activities query with sorting applied

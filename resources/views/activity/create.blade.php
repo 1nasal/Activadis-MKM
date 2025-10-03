@@ -111,84 +111,102 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const uploadArea = document.getElementById('upload-area');
-            const fileInput = document.getElementById('images');
-            const previewArea = document.getElementById('image-previews');
-            let selectedFiles = [];
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('images');
+        const previewArea = document.getElementById('image-previews');
+        let selectedFiles = [];
 
-            // Click to select files
-            uploadArea.addEventListener('click', () => fileInput.click());
+        // Remove the click handler from uploadArea entirely
+        // The label's native behavior will handle clicks
 
-            // Drag and drop functionality
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('bg-blue-50', 'border-blue-300');
-            });
-
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('bg-blue-50', 'border-blue-300');
-            });
-
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('bg-blue-50', 'border-blue-300');
-                
-                const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-                handleFiles(files);
-            });
-
-            // Handle file selection
-            fileInput.addEventListener('change', (e) => {
-                const files = Array.from(e.target.files);
-                handleFiles(files);
-            });
-
-            function handleFiles(files) {
-                selectedFiles = [...selectedFiles, ...files];
-                updateFileInput();
-                showPreviews();
-            }
-
-            function updateFileInput() {
-                const dt = new DataTransfer();
-                selectedFiles.forEach(file => dt.items.add(file));
-                fileInput.files = dt.files;
-            }
-
-            function showPreviews() {
-                previewArea.innerHTML = '';
-                previewArea.classList.remove('hidden');
-
-                selectedFiles.forEach((file, index) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const div = document.createElement('div');
-                        div.className = 'relative group';
-                        div.innerHTML = `
-                            <img src="${e.target.result}" alt="Preview" class="w-full h-24 object-cover rounded border">
-                            <button type="button" onclick="removeImage(${index})" 
-                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                ×
-                            </button>
-                            <div class="text-xs text-gray-600 mt-1 truncate">${file.name}</div>
-                        `;
-                        previewArea.appendChild(div);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
-
-            window.removeImage = function(index) {
-                selectedFiles.splice(index, 1);
-                updateFileInput();
-                if (selectedFiles.length === 0) {
-                    previewArea.classList.add('hidden');
-                } else {
-                    showPreviews();
-                }
-            };
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.add('bg-blue-50', 'border-blue-300');
         });
-    </script>
+
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('bg-blue-50', 'border-blue-300');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadArea.classList.remove('bg-blue-50', 'border-blue-300');
+            
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        function handleFiles(files) {
+            // Filter out duplicates
+            const newFiles = files.filter(file => {
+                return !selectedFiles.some(existingFile => 
+                    existingFile.name === file.name && existingFile.size === file.size
+                );
+            });
+            
+            selectedFiles = [...selectedFiles, ...newFiles];
+            updateFileInput();
+            showPreviews();
+        }
+
+        function updateFileInput() {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            fileInput.files = dt.files;
+        }
+
+        function showPreviews() {
+            previewArea.innerHTML = '';
+            
+            if (selectedFiles.length === 0) {
+                previewArea.classList.add('hidden');
+                return;
+            }
+            
+            previewArea.classList.remove('hidden');
+
+            selectedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview" class="w-full h-24 object-cover rounded border">
+                        <button type="button" onclick="removeImage(${index})" 
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                            ×
+                        </button>
+                        <div class="text-xs text-gray-600 mt-1 truncate">${file.name}</div>
+                    `;
+                    previewArea.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.removeImage = function(index) {
+            selectedFiles.splice(index, 1);
+            updateFileInput();
+            showPreviews();
+        };
+    });
+</script>
 </x-app-layout>
