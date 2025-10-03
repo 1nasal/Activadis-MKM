@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Mail\ActivityJoinedMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 
 class ActivityController extends Controller
 {
@@ -70,7 +71,7 @@ class ActivityController extends Controller
             case 'participants':
                 // Sort by total participant count (users + externals)
                 $query->withCount(['users', 'externals'])
-                      ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
+                    ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
                 break;
             default:
                 $query->orderBy($sortBy, $sortOrder);
@@ -230,9 +231,10 @@ class ActivityController extends Controller
         }
     }
 
+
     public function join(Request $request, Activity $activity)
     {
-        if (auth()->guest()) {
+        if (Auth::guest()) {
             $validated = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
@@ -258,7 +260,7 @@ class ActivityController extends Controller
             return back()->with('success', 'Je neemt nu deel aan de activiteit!');
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
 
         if ($activity->users()->where('user_id', $user->id)->exists()) {
             return back()->with('error', 'Je neemt al deel aan deze activiteit.');
