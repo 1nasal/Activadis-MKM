@@ -18,7 +18,10 @@
                             <ul class="space-y-3">
                                 @foreach($activities as $activity)
                                     @php
-                                        $isPast = $activity->end_time < now();
+                                        $now = now();
+                                        $isPast = $activity->end_time < $now;
+                                        $isOngoing = $activity->start_time <= $now && $activity->end_time >= $now;
+                                        $isUpcoming = $activity->start_time > $now;
                                         $totalParticipants = $activity->users->count() + $activity->externals->count();
                                     @endphp
                                     <li>
@@ -37,6 +40,13 @@
                                                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
                                                                 </svg>
                                                                 Afgelopen
+                                                            </span>
+                                                        @elseif($isOngoing)
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                                <svg class="w-3 h-3 mr-1 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                                                                </svg>
+                                                                Bezig
                                                             </span>
                                                         @else
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

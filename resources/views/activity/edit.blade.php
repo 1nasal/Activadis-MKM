@@ -70,13 +70,6 @@
                         @error('min_participants') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block font-medium" for="image">Afbeelding (URL) - Optioneel</label>
-                        <input class="w-full border rounded p-2" type="text" name="image" id="image" value="{{ old('image', $activity->image) }}" placeholder="https://example.com/image.jpg">
-                        @error('image') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
-                        <p class="text-xs text-gray-500 mt-1">Je kunt een afbeelding-URL invoeren of hieronder bestanden uploaden</p>
-                    </div>
-
                     <!-- Existing images -->
                     @if($activity->images->count() > 0)
                         <div class="mb-4">
