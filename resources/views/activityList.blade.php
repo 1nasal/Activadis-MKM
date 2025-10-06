@@ -96,6 +96,12 @@
         @if($activities->count() > 0)
             <div class="space-y-4">
                 @foreach($activities as $activity)
+                    @php
+                        $totalParticipants = $activity->users->count() + $activity->externals->count();
+                        $isFull = $activity->max_participants && $totalParticipants >= $activity->max_participants;
+                        $isEnrolled = auth()->check() && $activity->users->contains(auth()->id());
+                    @endphp
+                    
                     <article
                         class="bg-white border border-gray-200 p-6 hover:border-gray-300 transition-colors cursor-pointer"
                         onclick="openActivityModal({{ $activity->id }})">
@@ -182,10 +188,6 @@
                                 <div class="text-gray-600 text-sm space-y-1 mb-3">
                                     <div>Locatie: {{ $activity->location }}</div>
 
-                                    @php
-                                        $totalParticipants = $activity->users->count() + $activity->externals->count();
-                                    @endphp
-
                                     <div>{{ $totalParticipants }} deelnemers
                                         @if($activity->max_participants)
                                             van {{ $activity->max_participants }}
@@ -211,19 +213,25 @@
                             </div>
 
                             <div class="md:w-32 flex-shrink-0 flex md:flex-col gap-2">
-                                @php $isFull = $activity->max_participants && $totalParticipants >= $activity->max_participants; @endphp
-
-                                <button
-                                    id="join-btn-{{ $activity->id }}"
-                                    onclick="event.stopPropagation(); @auth joinActivityDirectly({{ $activity->id }}) @else openParticipantModal({{ $activity->id }}) @endauth"
-                                    class="px-4 py-2 text-sm font-medium border transition-colors {{ $isFull ? 'border-gray-300 text-gray-500 cursor-not-allowed' : 'border-blue-600 text-blue-600 hover:bg-blue-50' }}"
-                                    {{ $isFull ? 'disabled' : '' }}>
-                                    <span class="join-btn-text">{{ $isFull ? 'Vol' : 'Inschrijven' }}</span>
-                                    <svg class="join-btn-spinner hidden animate-spin h-4 w-4 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                </button>
+                                @if($isEnrolled)
+                                    <button
+                                        class="px-4 py-2 text-sm font-medium border border-green-600 text-green-600 cursor-not-allowed"
+                                        disabled>
+                                        Ingeschreven
+                                    </button>
+                                @else
+                                    <button
+                                        id="join-btn-{{ $activity->id }}"
+                                        onclick="event.stopPropagation(); @auth joinActivityDirectly({{ $activity->id }}) @else openParticipantModal({{ $activity->id }}) @endauth"
+                                        class="px-4 py-2 text-sm font-medium border transition-colors {{ $isFull ? 'border-gray-300 text-gray-500 cursor-not-allowed' : 'border-blue-600 text-blue-600 hover:bg-blue-50' }}"
+                                        {{ $isFull ? 'disabled' : '' }}>
+                                        <span class="join-btn-text">{{ $isFull ? 'Vol' : 'Inschrijven' }}</span>
+                                        <svg class="join-btn-spinner hidden animate-spin h-4 w-4 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    </button>
+                                @endif
                             </div>
 
                         </div>
@@ -376,7 +384,8 @@
                 @endforeach
             ],
             primary_image: @json($activity->primary_image),
-            total_participants: {{ $activity->users->count() + $activity->externals->count() }}
+            total_participants: {{ $activity->users->count() + $activity->externals->count() }},
+            is_enrolled: {{ auth()->check() && $activity->users->contains(auth()->id()) ? 'true' : 'false' }}
         };
 
         @if($activity->images->count() > 1)
@@ -502,7 +511,11 @@
             const joinButton = document.getElementById('modalJoinButton');
             const isFull = activity.max_participants && activity.total_participants >= activity.max_participants;
 
-            if (isFull) {
+            if (activity.is_enrolled) {
+                document.getElementById('modalJoinButtonText').textContent = 'Ingeschreven';
+                joinButton.className = 'px-6 py-2 bg-green-600 text-white rounded-lg cursor-not-allowed inline-flex items-center';
+                joinButton.disabled = true;
+            } else if (isFull) {
                 document.getElementById('modalJoinButtonText').textContent = 'Vol';
                 joinButton.className = 'px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed inline-flex items-center';
                 joinButton.disabled = true;
