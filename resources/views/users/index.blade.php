@@ -14,8 +14,8 @@
                     </x-link-button>
 
                     <div class="overflow-x-auto mt-6">
-                        <table class="min-w-full divide-y divide-gray-300">
-                            <thead class="bg-gray-50">
+                        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                     <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                         Voornaam
@@ -29,15 +29,15 @@
                                     <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                         Functietitel
                                     </th>
-                                    <th scope="col" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                        Acties
-                                    </th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white">
+                            <tbody class="divide-y divide-gray-200 bg-gray-50">
                                 @forelse($users as $user)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <tr 
+                                        onclick="window.location='{{ route('users.show', $user->id) }}'"
+                                        class="cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition duration-200 ease-in-out border border-transparent"
+                                    >
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                                             {{ $user->first_name }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -47,18 +47,19 @@
                                             {{ $user->email }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $user->job_title }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            <x-link-button href="{{ route('users.show', $user->id) }}">
-                                                Meer weergeven
-                                            </x-link-button>
+                                            @if($user->job_title)
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                    {{ $user->job_title }}
+                                                </span>
+                                            @else
+                                                <span class="text-gray-400 italic">Geen functie</span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-6 py-4 text-sm text-gray-500">
-                                            Geen gebruikers gevonden.
+                                        <td colspan="4" class="px-6 py-4 text-sm text-gray-500 text-center bg-gray-50 rounded-lg">
+                                            Er zijn nog geen gebruikers.
                                         </td>
                                     </tr>
                                 @endforelse
