@@ -19,11 +19,6 @@
                             <p class="text-sm text-gray-500">Gebruikersinformatie</p>
                         </div>
                         <div class="flex items-center space-x-2">
-                            @if($user->role)
-                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                    {{ ucfirst($user->role) }}
-                                </span>
-                            @endif
                             @if($user->job_title)
                                 <span class="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                                     {{ $user->job_title }}
