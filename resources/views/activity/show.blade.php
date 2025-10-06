@@ -13,13 +13,11 @@
                 @if($activity->images->count() > 0 || $activity->image)
                     <div class="mb-6">
                         @if($activity->images->count() > 0)
-                            <!-- Multiple uploaded images -->
                             @if($activity->images->count() === 1)
                                 <img src="{{ $activity->images->first()->url }}" 
                                      alt="{{ $activity->name }}" 
                                      class="w-full h-64 object-cover">
                             @else
-                                <!-- Image gallery for multiple images -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                                     @foreach($activity->images as $image)
                                         <div class="group cursor-pointer" onclick="openImageModal('{{ $image->url }}', '{{ $image->original_name }}')">
@@ -31,7 +29,6 @@
                                 </div>
                             @endif
                         @elseif($activity->image)
-                            <!-- Single image from URL field -->
                             <img src="{{ $activity->image }}" 
                                  alt="{{ $activity->name }}" 
                                  class="w-full h-64 object-cover">
@@ -92,6 +89,18 @@
                                 </div>
                             @endif
                             
+                            @php
+                                $totalParticipants = $activity->users->count() + $activity->externals->count();
+                            @endphp
+                            <div>
+                                <strong class="text-gray-700">Aantal deelnemers:</strong>
+                                <span class="ml-2">{{ $totalParticipants }}
+                                    @if($activity->max_participants)
+                                        van {{ $activity->max_participants }}
+                                    @endif
+                                </span>
+                            </div>
+                            
                             @if($activity->images->count() > 1)
                                 <div>
                                     <strong class="text-gray-700">Afbeeldingen:</strong>
@@ -112,6 +121,68 @@
                         <div class="mb-8">
                             <h4 class="text-xl font-semibold mb-3">Vereisten</h4>
                             <p class="text-gray-700 leading-relaxed">{{ $activity->requirements }}</p>
+                        </div>
+                    @endif
+
+                    <!-- Participants Section -->
+                    @if($totalParticipants > 0)
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold mb-3">Deelnemers ({{ $totalParticipants }})</h4>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                @if($activity->users->count() > 0)
+                                    <div class="mb-4">
+                                        <h5 class="font-medium text-gray-700 mb-2">Geregistreerde gebruikers</h5>
+                                        <ul class="space-y-2">
+                                            @foreach($activity->users as $user)
+                                                <li class="flex items-start text-gray-700">
+                                                    <svg class="w-5 h-5 mr-2 mt-0.5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    <div>
+                                                        <div class="flex items-center gap-2">
+                                                            <span>{{ $user->first_name }} {{ $user->last_name }}</span>
+                                                            @if($user->job_title)
+                                                                <span class="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded">{{ $user->job_title }}</span>
+                                                            @endif
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">{{ $user->email }}</div>
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
+                                @if($activity->externals->count() > 0)
+                                    <div>
+                                        <h5 class="font-medium text-gray-700 mb-2">Externe deelnemers</h5>
+                                        <ul class="space-y-2">
+                                            @foreach($activity->externals as $external)
+                                                <li class="flex items-start text-gray-700">
+                                                    <svg class="w-5 h-5 mr-2 mt-0.5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    <div>
+                                                        <div class="flex items-center gap-2">
+                                                            <span>{{ $external->first_name }} {{ $external->last_name }}</span>
+                                                            <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 rounded">Extern</span>
+                                                        </div>
+                                                        <div class="text-sm text-gray-500">{{ $external->email }}</div>
+                                                    </div>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @else
+                        <div class="mb-8">
+                            <h4 class="text-xl font-semibold mb-3">Deelnemers</h4>
+                            <div class="bg-gray-50 rounded-lg p-4 text-center text-gray-500">
+                                Nog geen deelnemers ingeschreven
+                            </div>
                         </div>
                     @endif
                     
@@ -155,14 +226,12 @@
             document.body.style.overflow = 'auto';
         }
 
-        // Close modal when clicking outside the image
         document.getElementById('imageModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeImageModal();
             }
         });
 
-        // Close modal with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && !document.getElementById('imageModal').classList.contains('hidden')) {
                 closeImageModal();
