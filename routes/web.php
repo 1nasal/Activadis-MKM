@@ -5,18 +5,21 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-// Home page - shows activities using activityList.blade.php
+// Home page
 Route::get('/', [ActivityController::class, 'home'])->name('home');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Dashboard - shows user's activities
+Route::get('/dashboard', [ActivityController::class, 'myActivities'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // Profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // User management
     Route::get('users', [UserController::class, 'index'])->name('users.index');
     Route::get('users/create', [UserController::class, 'create'])->name('users.create');
     Route::post('users/store', [UserController::class, 'store'])->name('users.store');
@@ -29,24 +32,20 @@ Route::middleware('auth')->group(function () {
 // External routes
 Route::post('/externals', [\App\Http\Controllers\ExternalController::class, 'store'])->name('externals.store');
 
+// Activity routes
 Route::prefix('activities')->name('activities.')->group(function () {
-    // Public index route - uses activity.index view
     Route::get('/', [ActivityController::class, 'index'])->name('index');
-
-    // Protected routes (auth required)
-    // Moet eigenlijk veranderd worden naar admins only
+    Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('join');
+    Route::get('/{activity}', [ActivityController::class, 'show'])->name('show');
+    
     Route::middleware('auth')->group(function () {
         Route::get('/create', [ActivityController::class, 'create'])->name('create');
         Route::post('/', [ActivityController::class, 'store'])->name('store');
         Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
         Route::put('/{activity}', [ActivityController::class, 'update'])->name('update');
         Route::delete('/{activity}', [ActivityController::class, 'destroy'])->name('destroy');
-        Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
+        Route::delete('/{activity}/leave', [ActivityController::class, 'leave'])->name('leave');
     });
-    Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('join');
-
-    // Show route comes last (dynamic parameter)
-    Route::get('/{activity}', [ActivityController::class, 'show'])->name('show');
 });
 
 require __DIR__.'/auth.php';
