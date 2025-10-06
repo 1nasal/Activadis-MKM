@@ -218,7 +218,7 @@
                                     onclick="event.stopPropagation(); @auth joinActivityDirectly({{ $activity->id }}) @else openParticipantModal({{ $activity->id }}) @endauth"
                                     class="px-4 py-2 text-sm font-medium border transition-colors {{ $isFull ? 'border-gray-300 text-gray-500 cursor-not-allowed' : 'border-blue-600 text-blue-600 hover:bg-blue-50' }}"
                                     {{ $isFull ? 'disabled' : '' }}>
-                                    <span class="join-btn-text">{{ $isFull ? 'Vol' : 'Deelnemen' }}</span>
+                                    <span class="join-btn-text">{{ $isFull ? 'Vol' : 'Inschrijven' }}</span>
                                     <svg class="join-btn-spinner hidden animate-spin h-4 w-4 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -275,7 +275,7 @@
                         id="modalJoinButton"
                         onclick="openParticipantModalFromDetail()"
                         class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
-                        <span id="modalJoinButtonText">Deelnemen</span>
+                        <span id="modalJoinButtonText">Inschrijven</span>
                         <svg id="modalJoinSpinner" class="hidden animate-spin ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -292,7 +292,7 @@
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Deelnemen aan activiteit</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Inschrijven voor activiteit</h3>
                     <button onclick="closeParticipantModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -321,7 +321,7 @@
                         </div>
                         <button type="submit" id="participantFormSubmit"
                                 class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center">
-                            <span id="participantFormText">Deelnemen</span>
+                            <span id="participantFormText">inschrijven</span>
                             <svg id="participantFormSpinner" class="hidden animate-spin ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -389,13 +389,13 @@
             const button = document.getElementById(`join-btn-${activityId}`);
             const textSpan = button.querySelector('.join-btn-text');
             const spinner = button.querySelector('.join-btn-spinner');
-            
+
             // Show loading state
             button.disabled = true;
             button.classList.add('opacity-75', 'cursor-not-allowed');
             textSpan.classList.add('hidden');
             spinner.classList.remove('hidden');
-            
+
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/activities/${activityId}/join`;
@@ -507,7 +507,7 @@
                 joinButton.className = 'px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed inline-flex items-center';
                 joinButton.disabled = true;
             } else {
-                document.getElementById('modalJoinButtonText').textContent = 'Deelnemen';
+                document.getElementById('modalJoinButtonText').textContent = 'Inschrijven';
                 joinButton.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center';
                 joinButton.disabled = false;
             }
@@ -538,12 +538,12 @@
             const modalButton = document.getElementById('modalJoinButton');
             const modalButtonText = document.getElementById('modalJoinButtonText');
             const modalSpinner = document.getElementById('modalJoinSpinner');
-            
+
             modalButton.disabled = true;
             modalButton.classList.add('opacity-75', 'cursor-not-allowed');
-            modalButtonText.textContent = 'Bezig met aanmelden...';
+            modalButtonText.textContent = 'Bezig met inschrijven...';
             modalSpinner.classList.remove('hidden');
-            
+
             joinActivityDirectly(selectedActivityId);
             @else
             openParticipantModal(selectedActivityId);
@@ -592,11 +592,11 @@
                     const submitBtn = document.getElementById('participantFormSubmit');
                     const btnText = document.getElementById('participantFormText');
                     const btnSpinner = document.getElementById('participantFormSpinner');
-                    
+
                     // Show loading state
                     submitBtn.disabled = true;
                     submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-                    btnText.textContent = 'Bezig met aanmelden...';
+                    btnText.textContent = 'Bezig met inschrijven...';
                     btnSpinner.classList.remove('hidden');
                 });
             }

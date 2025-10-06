@@ -262,38 +262,38 @@ class ActivityController extends Controller
             );
 
             if ($activity->externals()->where('external_id', $external->id)->exists()) {
-                return back()->with('error', 'Je hebt al deelgenomen aan deze activiteit als externe.');
+                return back()->with('error', 'Je bent al ingeschreven voor deze activiteit als externe.');
             }
 
             $activity->externals()->attach($external->id);
 
             Mail::to($external->email)->send(new ActivityJoinedMail($activity, $external->first_name));
 
-            return back()->with('success', 'Je neemt nu deel aan de activiteit!');
+            return back()->with('success', 'Je bent nu ingeschreven voor de activiteit!');
         }
 
         $user = Auth::user();
 
         if ($activity->users()->where('user_id', $user->id)->exists()) {
-            return back()->with('error', 'Je neemt al deel aan deze activiteit.');
+            return back()->with('error', 'Je bent al ingeschreven voor deze activiteit.');
         }
 
         $activity->users()->attach($user->id);
 
         Mail::to($user->email)->send(new ActivityJoinedMail($activity, $user->first_name));
 
-        return back()->with('success', 'Je neemt nu deel aan de activiteit!');
+        return back()->with('success', 'Je bent nu ingeschreven voor de activiteit!');
     }
 
     public function myActivities(Request $request)
     {
         $user = Auth::user();
-        
+
         $sortBy = $request->get('sort', 'start_time');
         $sortOrder = $request->get('order', 'asc');
-        
+
         $query = $user->activities()->with(['users', 'externals', 'images']);
-        
+
         $validSortColumns = ['start_time', 'name', 'participants'];
         $validSortOrders = ['asc', 'desc'];
 
@@ -314,22 +314,22 @@ class ActivityController extends Controller
                 $query->orderBy($sortBy, $sortOrder);
                 break;
         }
-        
+
         $activities = $query->get();
-        
+
         return view('dashboard', compact('activities'));
     }
 
     public function leave(Activity $activity)
     {
         $user = Auth::user();
-        
+
         if (!$activity->users()->where('user_id', $user->id)->exists()) {
             return back()->with('error', 'Je neemt niet deel aan deze activiteit.');
         }
-        
+
         $activity->users()->detach($user->id);
-        
+
         return back()->with('success', 'Je bent uitgeschreven voor de activiteit.');
     }
 }
