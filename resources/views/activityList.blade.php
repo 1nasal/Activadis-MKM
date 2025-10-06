@@ -214,10 +214,15 @@
                                 @php $isFull = $activity->max_participants && $totalParticipants >= $activity->max_participants; @endphp
 
                                 <button
+                                    id="join-btn-{{ $activity->id }}"
                                     onclick="event.stopPropagation(); @auth joinActivityDirectly({{ $activity->id }}) @else openParticipantModal({{ $activity->id }}) @endauth"
                                     class="px-4 py-2 text-sm font-medium border transition-colors {{ $isFull ? 'border-gray-300 text-gray-500 cursor-not-allowed' : 'border-blue-600 text-blue-600 hover:bg-blue-50' }}"
                                     {{ $isFull ? 'disabled' : '' }}>
-                                    {{ $isFull ? 'Vol' : 'Deelnemen' }}
+                                    <span class="join-btn-text">{{ $isFull ? 'Vol' : 'Deelnemen' }}</span>
+                                    <svg class="join-btn-spinner hidden animate-spin h-4 w-4 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
                                 </button>
                             </div>
 
@@ -269,8 +274,12 @@
                     <button
                         id="modalJoinButton"
                         onclick="openParticipantModalFromDetail()"
-                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        Deelnemen
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
+                        <span id="modalJoinButtonText">Deelnemen</span>
+                        <svg id="modalJoinSpinner" class="hidden animate-spin ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -310,9 +319,13 @@
                             <input type="email" id="email" name="email" required
                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        <button type="submit"
-                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            Deelnemen
+                        <button type="submit" id="participantFormSubmit"
+                                class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center justify-center">
+                            <span id="participantFormText">Deelnemen</span>
+                            <svg id="participantFormSpinner" class="hidden animate-spin ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
                         </button>
                     </div>
                 </form>
@@ -373,6 +386,16 @@
 
         // Define all functions globally BEFORE DOMContentLoaded
         window.joinActivityDirectly = function(activityId) {
+            const button = document.getElementById(`join-btn-${activityId}`);
+            const textSpan = button.querySelector('.join-btn-text');
+            const spinner = button.querySelector('.join-btn-spinner');
+            
+            // Show loading state
+            button.disabled = true;
+            button.classList.add('opacity-75', 'cursor-not-allowed');
+            textSpan.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/activities/${activityId}/join`;
@@ -480,12 +503,12 @@
             const isFull = activity.max_participants && activity.total_participants >= activity.max_participants;
 
             if (isFull) {
-                joinButton.textContent = 'Vol';
-                joinButton.className = 'px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed';
+                document.getElementById('modalJoinButtonText').textContent = 'Vol';
+                joinButton.className = 'px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed inline-flex items-center';
                 joinButton.disabled = true;
             } else {
-                joinButton.textContent = 'Deelnemen';
-                joinButton.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors';
+                document.getElementById('modalJoinButtonText').textContent = 'Deelnemen';
+                joinButton.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center';
                 joinButton.disabled = false;
             }
 
@@ -511,6 +534,16 @@
             if (!selectedActivityId) return;
 
             @auth
+            // Show loading state on modal button
+            const modalButton = document.getElementById('modalJoinButton');
+            const modalButtonText = document.getElementById('modalJoinButtonText');
+            const modalSpinner = document.getElementById('modalJoinSpinner');
+            
+            modalButton.disabled = true;
+            modalButton.classList.add('opacity-75', 'cursor-not-allowed');
+            modalButtonText.textContent = 'Bezig met aanmelden...';
+            modalSpinner.classList.remove('hidden');
+            
             joinActivityDirectly(selectedActivityId);
             @else
             openParticipantModal(selectedActivityId);
@@ -549,6 +582,22 @@
                     if (!sortButton.contains(e.target) && !sortMenu.contains(e.target)) {
                         sortMenu.classList.add('hidden');
                     }
+                });
+            }
+
+            // Participant form submit handler
+            const participantForm = document.getElementById('participantForm');
+            if (participantForm) {
+                participantForm.addEventListener('submit', function(e) {
+                    const submitBtn = document.getElementById('participantFormSubmit');
+                    const btnText = document.getElementById('participantFormText');
+                    const btnSpinner = document.getElementById('participantFormSpinner');
+                    
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                    btnText.textContent = 'Bezig met aanmelden...';
+                    btnSpinner.classList.remove('hidden');
                 });
             }
 

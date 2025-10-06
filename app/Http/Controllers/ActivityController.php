@@ -33,42 +33,39 @@ class ActivityController extends Controller
     /**
      * Display listing for activities index (/activities)
      */
-public function index(Request $request)
-{
-    $sortBy = $request->get('sort', 'start_time');
-    $sortOrder = $request->get('order', 'desc'); // Changed default to desc for recent first
+    public function index(Request $request)
+    {
+        $sortBy = $request->get('sort', 'start_time');
+        $sortOrder = $request->get('order', 'desc');
 
-    // Get all activities (both past and upcoming)
-    $query = Activity::with(['users', 'externals', 'images']);
+        $query = Activity::with(['users', 'externals', 'images']);
 
-    // Validate sort parameters
-    $validSortColumns = ['start_time', 'name', 'participants'];
-    $validSortOrders = ['asc', 'desc'];
+        $validSortColumns = ['start_time', 'name', 'participants'];
+        $validSortOrders = ['asc', 'desc'];
 
-    if (!in_array($sortBy, $validSortColumns)) {
-        $sortBy = 'start_time';
+        if (!in_array($sortBy, $validSortColumns)) {
+            $sortBy = 'start_time';
+        }
+
+        if (!in_array($sortOrder, $validSortOrders)) {
+            $sortOrder = 'desc';
+        }
+
+        switch ($sortBy) {
+            case 'participants':
+                $query->withCount(['users', 'externals'])
+                      ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
+                break;
+            default:
+                $query->orderBy($sortBy, $sortOrder);
+                break;
+        }
+
+        $activities = $query->paginate(12);
+        $activities->appends($request->query());
+
+        return view('activity.index', compact('activities', 'sortBy', 'sortOrder'));
     }
-
-    if (!in_array($sortOrder, $validSortOrders)) {
-        $sortOrder = 'desc';
-    }
-
-    // Handle special sorting cases
-    switch ($sortBy) {
-        case 'participants':
-            $query->withCount(['users', 'externals'])
-                  ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
-            break;
-        default:
-            $query->orderBy($sortBy, $sortOrder);
-            break;
-    }
-
-    $activities = $query->paginate(12);
-    $activities->appends($request->query());
-
-    return view('activity.index', compact('activities', 'sortBy', 'sortOrder'));
-}
 
     /**
      * Get activities query with sorting applied
@@ -78,7 +75,6 @@ public function index(Request $request)
         $query = Activity::with(['users', 'externals', 'images'])
             ->where('start_time', '>', now());
 
-        // Validate sort parameters - only allow the 3 required sort options
         $validSortColumns = ['start_time', 'name', 'participants'];
         $validSortOrders = ['asc', 'desc'];
 
@@ -90,17 +86,14 @@ public function index(Request $request)
             $sortOrder = 'asc';
         }
 
-        // Handle special sorting cases
         switch ($sortBy) {
             case 'participants':
-                // Sort by total participant count (users + externals)
                 $query->withCount(['users', 'externals'])
                     ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
                 break;
             default:
                 $query->orderBy($sortBy, $sortOrder);
 
-                // Add secondary sort by start_time for consistent ordering
                 if ($sortBy !== 'start_time') {
                     $query->orderBy('start_time', 'asc');
                 }
@@ -133,14 +126,13 @@ public function index(Request $request)
             'cost' => 'required|numeric',
             'max_participants' => 'nullable|integer',
             'min_participants' => 'nullable|integer',
-            'image' => 'nullable|string', // Behoud het oude image veld
+            'image' => 'nullable|string',
             'requirements' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $activity = Activity::create($validated);
 
-        // Handle image uploads
         if ($request->hasFile('images')) {
             $this->handleImageUploads($request->file('images'), $activity);
         }
@@ -182,7 +174,7 @@ public function index(Request $request)
             'cost' => 'required|numeric',
             'max_participants' => 'nullable|integer',
             'min_participants' => 'nullable|integer',
-            'image' => 'nullable|string', // Behoud het oude image veld
+            'image' => 'nullable|string',
             'requirements' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'remove_images' => 'nullable|array',
@@ -191,12 +183,10 @@ public function index(Request $request)
 
         $activity->update($validated);
 
-        // Handle image removal
         if ($request->has('remove_images')) {
             $this->removeImages($request->remove_images);
         }
 
-        // Handle new image uploads
         if ($request->hasFile('images')) {
             $this->handleImageUploads($request->file('images'), $activity);
         }
@@ -209,7 +199,6 @@ public function index(Request $request)
      */
     public function destroy(Activity $activity)
     {
-        // Delete all associated images from storage
         foreach ($activity->images as $image) {
             Storage::disk('public')->delete($image->path);
         }
@@ -255,7 +244,6 @@ public function index(Request $request)
         }
     }
 
-
     public function join(Request $request, Activity $activity)
     {
         if (Auth::guest()) {
@@ -297,10 +285,37 @@ public function index(Request $request)
         return back()->with('success', 'Je neemt nu deel aan de activiteit!');
     }
 
-    public function myActivities()
+    public function myActivities(Request $request)
     {
         $user = Auth::user();
-        $activities = $user->activities()->with(['users', 'externals'])->get();
+        
+        $sortBy = $request->get('sort', 'start_time');
+        $sortOrder = $request->get('order', 'asc');
+        
+        $query = $user->activities()->with(['users', 'externals', 'images']);
+        
+        $validSortColumns = ['start_time', 'name', 'participants'];
+        $validSortOrders = ['asc', 'desc'];
+
+        if (!in_array($sortBy, $validSortColumns)) {
+            $sortBy = 'start_time';
+        }
+
+        if (!in_array($sortOrder, $validSortOrders)) {
+            $sortOrder = 'asc';
+        }
+
+        switch ($sortBy) {
+            case 'participants':
+                $query->withCount(['users', 'externals'])
+                      ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
+                break;
+            default:
+                $query->orderBy($sortBy, $sortOrder);
+                break;
+        }
+        
+        $activities = $query->get();
         
         return view('dashboard', compact('activities'));
     }

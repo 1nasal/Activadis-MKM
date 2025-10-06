@@ -108,9 +108,9 @@
                             <ul class="space-y-3">
                                 @foreach($upcomingActivities as $activity)
                                     <li>
-                                        <div class="block px-6 py-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:border-blue-300 transition-colors" onclick="openActivityModal({{ $activity->id }})">
+                                        <div class="block px-6 py-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
                                             <div class="flex items-start justify-between">
-                                                <div class="flex-1">
+                                                <div class="flex-1 cursor-pointer" onclick="openActivityModal({{ $activity->id }})">
                                                     <div class="flex items-center gap-3 mb-3">
                                                         <span class="text-base font-semibold text-gray-900">
                                                             {{ $activity->name }}
@@ -142,14 +142,13 @@
 
                                                         @if($activity->cost > 0)
                                                             <span class="flex items-center">
-                                                             
-                                                                € {{ number_format($activity->cost, 2, ',', '.') }}
+                                                                €{{ number_format($activity->cost, 2, ',', '.') }}
                                                             </span>
                                                         @endif
                                                     </div>
                                                 </div>
                                                 
-                                                <form action="{{ route('activities.leave', $activity) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je je wilt uitschrijven voor deze activiteit?');" class="ml-4">
+                                                <form action="{{ route('activities.leave', $activity) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je je wilt uitschrijven voor deze activiteit?');" class="ml-4" onclick="event.stopPropagation();">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
