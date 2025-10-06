@@ -296,4 +296,25 @@ public function index(Request $request)
 
         return back()->with('success', 'Je neemt nu deel aan de activiteit!');
     }
+
+    public function myActivities()
+    {
+        $user = Auth::user();
+        $activities = $user->activities()->with(['users', 'externals'])->get();
+        
+        return view('dashboard', compact('activities'));
+    }
+
+    public function leave(Activity $activity)
+    {
+        $user = Auth::user();
+        
+        if (!$activity->users()->where('user_id', $user->id)->exists()) {
+            return back()->with('error', 'Je neemt niet deel aan deze activiteit.');
+        }
+        
+        $activity->users()->detach($user->id);
+        
+        return back()->with('success', 'Je bent uitgeschreven voor de activiteit.');
+    }
 }
