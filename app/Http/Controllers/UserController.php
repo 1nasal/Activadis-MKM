@@ -10,11 +10,25 @@ use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('users.index', [
-            'users' => User::where('role', '!=', 'admin')->get()
-        ]);
+        $search = $request->get('search');
+
+        $query = User::where('role', '!=', 'admin');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                ->orWhere('last_name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('job_title', 'like', "%{$search}%");
+            });
+        }
+
+        $users = $query->orderBy('first_name')->paginate(10);
+        $users->appends($request->query());
+
+        return view('users.index', compact('users'));
     }
 
     public function create()

@@ -21,8 +21,9 @@ class ActivityController extends Controller
     {
         $sortBy = $request->get('sort', 'start_time');
         $sortOrder = $request->get('order', 'asc');
+        $search = $request->get('search');
 
-        $activities = $this->getActivitiesQuery($sortBy, $sortOrder)->paginate(12);
+        $activities = $this->getActivitiesQuery($sortBy, $sortOrder, $search)->paginate(12);
 
         // Append query parameters to pagination links
         $activities->appends($request->query());
@@ -37,8 +38,18 @@ class ActivityController extends Controller
     {
         $sortBy = $request->get('sort', 'start_time');
         $sortOrder = $request->get('order', 'desc');
+        $search = $request->get('search');
 
         $query = Activity::with(['users', 'externals', 'images']);
+
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->orWhere('location', 'like', '%' . $search . '%');
+            });
+        }
 
         $validSortColumns = ['start_time', 'name', 'participants'];
         $validSortOrders = ['asc', 'desc'];
@@ -54,7 +65,7 @@ class ActivityController extends Controller
         switch ($sortBy) {
             case 'participants':
                 $query->withCount(['users', 'externals'])
-                      ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
+                    ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
                 break;
             default:
                 $query->orderBy($sortBy, $sortOrder);
@@ -68,12 +79,21 @@ class ActivityController extends Controller
     }
 
     /**
-     * Get activities query with sorting applied
+     * Get activities query with sorting and search applied
      */
-    private function getActivitiesQuery($sortBy, $sortOrder)
+    private function getActivitiesQuery($sortBy, $sortOrder, $search = null)
     {
         $query = Activity::with(['users', 'externals', 'images'])
             ->where('start_time', '>', now());
+
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->orWhere('location', 'like', '%' . $search . '%');
+            });
+        }
 
         $validSortColumns = ['start_time', 'name', 'participants'];
         $validSortOrders = ['asc', 'desc'];
@@ -291,8 +311,18 @@ class ActivityController extends Controller
 
         $sortBy = $request->get('sort', 'start_time');
         $sortOrder = $request->get('order', 'asc');
+        $search = $request->get('search');
 
         $query = $user->activities()->with(['users', 'externals', 'images']);
+
+        // Apply search filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%')
+                    ->orWhere('location', 'like', '%' . $search . '%');
+            });
+        }
 
         $validSortColumns = ['start_time', 'name', 'participants'];
         $validSortOrders = ['asc', 'desc'];
@@ -308,7 +338,7 @@ class ActivityController extends Controller
         switch ($sortBy) {
             case 'participants':
                 $query->withCount(['users', 'externals'])
-                      ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
+                    ->orderByRaw('(users_count + externals_count) ' . $sortOrder);
                 break;
             default:
                 $query->orderBy($sortBy, $sortOrder);

@@ -132,7 +132,6 @@
                             <div class="bg-gray-50 rounded-lg p-4">
                                 @if($activity->users->count() > 0)
                                     <div class="mb-4">
-                                        <h5 class="font-medium text-gray-700 mb-2">Geregistreerde gebruikers</h5>
                                         <ul class="space-y-2">
                                             @foreach($activity->users as $user)
                                                 <li class="flex items-start text-gray-700">

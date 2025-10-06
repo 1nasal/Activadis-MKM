@@ -13,6 +13,116 @@
                         {{ __("Activiteit aanmaken") }}
                     </x-link-button>
 
+                    <!-- Zoekbalk -->
+                    <div class="mt-6 mb-4">
+                        <form method="GET" action="{{ url()->current() }}" class="relative">
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ request('search') }}"
+                                   placeholder="Zoek op titel, beschrijving of locatie..."
+                                   class="w-full px-4 py-3 pl-11 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            @if(request('search'))
+                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" 
+                                   class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </a>
+                            @endif
+                            <!-- Hidden inputs to preserve sort parameters -->
+                            @if(request('sort'))
+                                <input type="hidden" name="sort" value="{{ request('sort') }}">
+                            @endif
+                            @if(request('order'))
+                                <input type="hidden" name="order" value="{{ request('order') }}">
+                            @endif
+                        </form>
+                    </div>
+
+                    <!-- Sorting Controls -->
+                    <div class="mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <!-- Sort Dropdown -->
+                            <div class="relative">
+                                <button id="sortDropdownButton" type="button"
+                                        class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-md">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
+                                    </svg>
+                                    <span id="sortButtonText">
+                                        @if(request('sort') === 'start_time' && request('order') === 'asc')
+                                            Datum (vroeg → laat)
+                                        @elseif(request('sort') === 'start_time' && request('order') === 'desc')
+                                            Datum (laat → vroeg)
+                                        @elseif(request('sort') === 'name' && request('order') === 'asc')
+                                            Naam (A → Z)
+                                        @elseif(request('sort') === 'name' && request('order') === 'desc')
+                                            Naam (Z → A)
+                                        @elseif(request('sort') === 'participants' && request('order') === 'asc')
+                                            Deelnemers (weinig → veel)
+                                        @elseif(request('sort') === 'participants' && request('order') === 'desc')
+                                            Deelnemers (veel → weinig)
+                                        @else
+                                            Sorteer op
+                                        @endif
+                                    </span>
+                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+
+                                <div id="sortDropdownMenu" class="hidden absolute left-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                                    <div class="py-1">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'asc']) }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'start_time' && request('order') === 'asc' ? 'bg-blue-50 text-blue-700' : '' }}">
+                                            Datum (vroeg → laat)
+                                        </a>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'desc']) }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'start_time' && request('order') === 'desc' ? 'bg-blue-50 text-blue-700' : '' }}">
+                                            Datum (laat → vroeg)
+                                        </a>
+                                        <hr class="my-1">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'order' => 'asc']) }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'name' && request('order') === 'asc' ? 'bg-blue-50 text-blue-700' : '' }}">
+                                            Naam (A → Z)
+                                        </a>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'order' => 'desc']) }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'name' && request('order') === 'desc' ? 'bg-blue-50 text-blue-700' : '' }}">
+                                            Naam (Z → A)
+                                        </a>
+                                        <hr class="my-1">
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'participants', 'order' => 'asc']) }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'participants' && request('order') === 'asc' ? 'bg-blue-50 text-blue-700' : '' }}">
+                                            Deelnemers (weinig → veel)
+                                        </a>
+                                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'participants', 'order' => 'desc']) }}"
+                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'participants' && request('order') === 'desc' ? 'bg-blue-50 text-blue-700' : '' }}">
+                                            Deelnemers (veel → weinig)
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Results count -->
+                            <span class="text-sm text-gray-600">
+                                {{ $activities->total() }} activiteit{{ $activities->total() !== 1 ? 'en' : '' }}
+                                @if(request('search'))
+                                    <span class="text-gray-500">voor "{{ request('search') }}"</span>
+                                @endif
+                            </span>
+                        </div>
+
+                        <!-- Reset button -->
+                        @if(request()->has('sort') || request()->has('order') || request()->has('search'))
+                            <a href="{{ url()->current() }}" class="text-sm text-blue-600 hover:text-blue-800 underline">
+                                Reset filters
+                            </a>
+                        @endif
+                    </div>
+
                     <div class="mt-6">
                         @if($activities->count())
                             <ul class="space-y-3">
@@ -97,7 +207,11 @@
                             </div>
                         @else
                             <div class="px-6 py-8 text-center text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
-                                Er zijn nog geen activiteiten.
+                                @if(request('search'))
+                                    Geen activiteiten gevonden voor "{{ request('search') }}".
+                                @else
+                                    Er zijn nog geen activiteiten.
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -105,4 +219,33 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sortButton = document.getElementById('sortDropdownButton');
+            const sortMenu = document.getElementById('sortDropdownMenu');
+
+            if (sortButton && sortMenu) {
+                sortButton.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sortMenu.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!sortButton.contains(e.target) && !sortMenu.contains(e.target)) {
+                        sortMenu.classList.add('hidden');
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    const sortMenu = document.getElementById('sortDropdownMenu');
+                    if (sortMenu && !sortMenu.classList.contains('hidden')) {
+                        sortMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+    </script>
 </x-app-layout>
