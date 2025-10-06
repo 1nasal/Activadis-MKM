@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -23,21 +24,28 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'first_name' => ['required', 'string', 'max:255'],
-                'last_name'  => ['required', 'string', 'max:255'],
-                'email'      => ['required', 'string', 'max:255', 'email', 'unique:users,email'],
-                'job_title'  => ['required', 'string', 'max:255'],
-                'role'       => ['required', 'string', 'max:255'],
-            ]);
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name'  => ['required', 'string', 'max:255'],
+            'email'      => ['required', 'string', 'max:255', 'email', 'unique:users,email'],
+            'job_title'  => ['required', 'string', 'max:255'],
+            'is_admin'   => ['nullable', 'boolean'],
+        ], [
+            'first_name.required' => 'Voornaam is verplicht.',
+            'last_name.required'  => 'Achternaam is verplicht.',
+            'email.required'      => 'E-mailadres is verplicht.',
+            'email.email'         => 'Vul een geldig e-mailadres in.',
+            'email.unique'        => 'Dit e-mailadres is al in gebruik.',
+            'job_title.required'  => 'Functietitel is verplicht.',
+        ]);
 
+        try {
             $user = new User();
             $user->first_name = $validated['first_name'];
             $user->last_name  = $validated['last_name'];
             $user->email      = $validated['email'];
             $user->job_title  = $validated['job_title'];
-            $user->role       = $validated['role'];
+            $user->role       = $request->has('is_admin') && $request->is_admin ? 'admin' : 'user';
             $user->activated  = false;
 
             $user->save();
@@ -45,23 +53,27 @@ class UserController extends Controller
             // reset link sturen naar aangemaakte gebruiker
             Password::sendResetLink(['email' => $user->email]);
 
-            return redirect()->route('users.index')->with('success', 'User created & email sent!');
+            return redirect()->route('users.index')->with('success', 'Gebruiker succesvol aangemaakt en e-mail verzonden!');
         } catch (\Exception $e) {
-            dd($e);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Er is iets misgegaan bij het aanmaken van de gebruiker. Probeer het opnieuw.');
         }
     }
 
     public function destroy(User $user)
     {
-        $user->delete();
-
-        return redirect()->route('users.index')->with('success', 'User deleted!');
+        try {
+            $user->delete();
+            return redirect()->route('users.index')->with('success', 'Gebruiker succesvol verwijderd!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Er is iets misgegaan bij het verwijderen van de gebruiker.');
+        }
     }
 
     public function show($id)
     {
         $user = User::findOrFail($id);
-
         return view('users.show', compact('user'));
     }
 
@@ -72,25 +84,34 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        try {
-            $validated = $request->validate([
-                'first_name' => ['required', 'string', 'max:255'],
-                'last_name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'string', 'max:255', 'email'],
-                'job_title' => ['required', 'string', 'max:255'],
-                'role' => ['required', 'string', 'max:255'],
-            ]);
+        $validated = $request->validate([
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name'  => ['required', 'string', 'max:255'],
+            'email'      => ['required', 'string', 'max:255', 'email', 'unique:users,email,' . $user->id],
+            'job_title'  => ['required', 'string', 'max:255'],
+            'is_admin'   => ['nullable', 'boolean'],
+        ], [
+            'first_name.required' => 'Voornaam is verplicht.',
+            'last_name.required'  => 'Achternaam is verplicht.',
+            'email.required'      => 'E-mailadres is verplicht.',
+            'email.email'         => 'Vul een geldig e-mailadres in.',
+            'email.unique'        => 'Dit e-mailadres is al in gebruik.',
+            'job_title.required'  => 'Functietitel is verplicht.',
+        ]);
 
+        try {
             $user->first_name = $validated['first_name'];
-            $user->last_name = $validated['last_name'];
-            $user->email = $validated['email'];
-            $user->job_title = $validated['job_title'];
-            $user->role = $validated['role'];
+            $user->last_name  = $validated['last_name'];
+            $user->email      = $validated['email'];
+            $user->job_title  = $validated['job_title'];
+            $user->role       = $request->has('is_admin') && $request->is_admin ? 'admin' : 'user';
             $user->save();
 
-            return redirect()->route('users.index')->with('success', 'User updated!');
+            return redirect()->route('users.index')->with('success', 'Gebruiker succesvol bijgewerkt!');
         } catch (\Exception $e) {
-            dd($e);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Er is iets misgegaan bij het bijwerken van de gebruiker.');
         }
     }
 }

@@ -35,12 +35,18 @@ Route::post('/externals', [\App\Http\Controllers\ExternalController::class, 'sto
 // Activity routes
 Route::prefix('activities')->name('activities.')->group(function () {
     Route::get('/', [ActivityController::class, 'index'])->name('index');
+    
+    // Create route MOET voor {activity} staan
+    Route::middleware('auth')->group(function () {
+        Route::get('/create', [ActivityController::class, 'create'])->name('create');
+        Route::post('/', [ActivityController::class, 'store'])->name('store');
+    });
+    
+    // Deze routes komen NA create
     Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('join');
     Route::get('/{activity}', [ActivityController::class, 'show'])->name('show');
     
     Route::middleware('auth')->group(function () {
-        Route::get('/create', [ActivityController::class, 'create'])->name('create');
-        Route::post('/', [ActivityController::class, 'store'])->name('store');
         Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit');
         Route::put('/{activity}', [ActivityController::class, 'update'])->name('update');
         Route::delete('/{activity}', [ActivityController::class, 'destroy'])->name('destroy');
