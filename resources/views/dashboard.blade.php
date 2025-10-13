@@ -23,8 +23,8 @@
                     <!-- Zoekbalk -->
                     <div class="mb-4">
                         <form method="GET" action="{{ url()->current() }}" class="relative">
-                            <input type="text" 
-                                   name="search" 
+                            <input type="text"
+                                   name="search"
                                    value="{{ request('search') }}"
                                    placeholder="Zoek op titel, beschrijving of locatie..."
                                    class="w-full px-4 py-3 pl-11 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -32,7 +32,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                             @if(request('search'))
-                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" 
+                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -61,9 +61,9 @@
                                     </svg>
                                     <span id="sortButtonText">
                                         @if(request('sort') === 'start_time' && request('order') === 'asc')
-                                            Datum (vroeg → laat)
+                                            Datum (nieuw → oud)
                                         @elseif(request('sort') === 'start_time' && request('order') === 'desc')
-                                            Datum (laat → vroeg)
+                                            Datum (oud → nieuw)
                                         @elseif(request('sort') === 'name' && request('order') === 'asc')
                                             Naam (A → Z)
                                         @elseif(request('sort') === 'name' && request('order') === 'desc')
@@ -85,11 +85,11 @@
                                     <div class="py-1">
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'asc']) }}"
                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'start_time' && request('order') === 'asc' ? 'bg-blue-50 text-blue-700' : '' }}">
-                                            Datum (vroeg → laat)
+                                            Datum (nieuw → oud)
                                         </a>
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'desc']) }}"
                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'start_time' && request('order') === 'desc' ? 'bg-blue-50 text-blue-700' : '' }}">
-                                            Datum (laat → vroeg)
+                                            Datum (oud → nieuw)
                                         </a>
                                         <hr class="my-1">
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'order' => 'asc']) }}"
@@ -133,7 +133,7 @@
                     <!-- Toekomstige activiteiten -->
                     <div class="mb-8">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Aankomende Activiteiten</h3>
-                        
+
                         @php
                             $upcomingActivities = $activities->filter(fn($activity) => $activity->end_time >= now());
                         @endphp
@@ -149,7 +149,7 @@
                                                         <span class="text-base font-semibold text-gray-900">
                                                             {{ $activity->name }}
                                                         </span>
-                                                        
+
                                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -157,7 +157,7 @@
                                                             Ingeschreven
                                                         </span>
                                                     </div>
-                                                    
+
                                                     <div class="flex items-center gap-4 text-sm text-gray-600">
                                                         <span class="flex items-center">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@
                                                             </svg>
                                                             {{ $activity->start_time->format('d-m-Y H:i') }}
                                                         </span>
-                                                        
+
                                                         <span class="flex items-center">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -181,7 +181,7 @@
                                                         @endif
                                                     </div>
                                                 </div>
-                                                
+
                                                 <form action="{{ route('activities.leave', $activity) }}" method="POST" onsubmit="return confirm('Weet je zeker dat je je wilt uitschrijven voor deze activiteit?');" class="ml-4" onclick="event.stopPropagation();">
                                                     @csrf
                                                     @method('DELETE')
