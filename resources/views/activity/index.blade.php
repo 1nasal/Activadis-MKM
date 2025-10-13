@@ -16,8 +16,8 @@
                     <!-- Zoekbalk -->
                     <div class="mt-6 mb-4">
                         <form method="GET" action="{{ url()->current() }}" class="relative">
-                            <input type="text" 
-                                   name="search" 
+                            <input type="text"
+                                   name="search"
                                    value="{{ request('search') }}"
                                    placeholder="Zoek op titel, beschrijving of locatie..."
                                    class="w-full px-4 py-3 pl-11 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -25,7 +25,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                             @if(request('search'))
-                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" 
+                                <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
                                    class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -54,9 +54,9 @@
                                     </svg>
                                     <span id="sortButtonText">
                                         @if(request('sort') === 'start_time' && request('order') === 'asc')
-                                            Datum (vroeg → laat)
+                                            Datum (nieuw → oud)
                                         @elseif(request('sort') === 'start_time' && request('order') === 'desc')
-                                            Datum (laat → vroeg)
+                                            Datum (oud → nieuw)
                                         @elseif(request('sort') === 'name' && request('order') === 'asc')
                                             Naam (A → Z)
                                         @elseif(request('sort') === 'name' && request('order') === 'desc')
@@ -78,11 +78,11 @@
                                     <div class="py-1">
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'asc']) }}"
                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'start_time' && request('order') === 'asc' ? 'bg-blue-50 text-blue-700' : '' }}">
-                                            Datum (vroeg → laat)
+                                            Datum (nieuw → oud)
                                         </a>
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'desc']) }}"
                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ request('sort') === 'start_time' && request('order') === 'desc' ? 'bg-blue-50 text-blue-700' : '' }}">
-                                            Datum (laat → vroeg)
+                                            Datum (oud → nieuw)
                                         </a>
                                         <hr class="my-1">
                                         <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'order' => 'asc']) }}"
@@ -135,7 +135,7 @@
                                         $totalParticipants = $activity->users->count() + $activity->externals->count();
                                     @endphp
                                     <li>
-                                        <a href="{{ route('activities.show', $activity) }}" 
+                                        <a href="{{ route('activities.show', $activity) }}"
                                            class="block px-6 py-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition duration-200 ease-in-out shadow-sm hover:shadow-md {{ $isPast ? 'opacity-75' : '' }}">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex-1">
@@ -143,7 +143,7 @@
                                                         <span class="text-base font-semibold text-gray-900">
                                                             {{ $activity->name }}
                                                         </span>
-                                                        
+
                                                         @if($isPast)
                                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                                 <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -167,7 +167,7 @@
                                                             </span>
                                                         @endif
                                                     </div>
-                                                    
+
                                                     <div class="mt-2 flex items-center gap-4 text-sm text-gray-600">
                                                         <span class="flex items-center">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,14 +175,14 @@
                                                             </svg>
                                                             {{ $activity->start_time->format('d-m-Y H:i') }}
                                                         </span>
-                                                        
+
                                                         <span class="flex items-center">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                                             </svg>
                                                             {{ $totalParticipants }} deelnemer{{ $totalParticipants != 1 ? 's' : '' }}
                                                         </span>
-                                                        
+
                                                         <span class="flex items-center">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
@@ -192,7 +192,7 @@
                                                         </span>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                                 </svg>
@@ -201,7 +201,7 @@
                                     </li>
                                 @endforeach
                             </ul>
-                            
+
                             <div class="mt-6">
                                 {{ $activities->links() }}
                             </div>
