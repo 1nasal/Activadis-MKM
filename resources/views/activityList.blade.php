@@ -488,7 +488,7 @@
 
             let modalContent = '';
 
-            // Altijd een image laten zien (uploads > placeholder)
+            // Afbeeldingen
             modalContent += '<div class="mb-6">';
             if (activity.images.length > 0) {
                 if (activity.images.length === 1) {
@@ -507,57 +507,48 @@
             }
             modalContent += '</div>';
 
+            // Info
             modalContent += '<div class="grid md:grid-cols-2 gap-8 mb-8">';
             modalContent += '<div class="space-y-4">';
             modalContent += `<div><strong class="text-gray-700">Locatie:</strong> <span class="ml-2">${activity.location}</span></div>`;
             modalContent += `<div><strong class="text-gray-700">Starttijd:</strong> <span class="ml-2">${activity.start_time}</span></div>`;
-
-            if (activity.end_time) {
-                modalContent += `<div><strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span></div>`;
-            }
-
+            if (activity.end_time) modalContent += `<div><strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span></div>`;
             modalContent += `<div><strong class="text-gray-700">Kosten:</strong> <span class="ml-2">${activity.cost > 0 ? '€' + activity.cost.toFixed(2).replace('.', ',') : 'Gratis'}</span></div>`;
             modalContent += '</div>';
 
             modalContent += '<div class="space-y-4">';
-            if (activity.includes_food) {
-                modalContent += `<div>Eten inbegrepen</div>`;
-            }
-
-            if (activity.max_participants) {
-                modalContent += `<div><strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span></div>`;
-            }
-
-            if (activity.min_participants) {
-                modalContent += `<div><strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span></div>`;
-            }
-
+            if (activity.includes_food) modalContent += `<div>Eten inbegrepen</div>`;
+            if (activity.max_participants) modalContent += `<div><strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span></div>`;
+            if (activity.min_participants) modalContent += `<div><strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span></div>`;
             modalContent += `<div><strong class="text-gray-700">Huidige deelnemers:</strong> <span class="ml-2">${activity.total_participants}</span></div>`;
             modalContent += '</div></div>';
 
-            if (activity.description) {
-                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Beschrijving</h4><p class="text-gray-700 leading-relaxed">${activity.description}</p></div>`;
-            }
-
-            if (activity.requirements) {
-                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Vereisten</h4><p class="text-gray-700 leading-relaxed">${activity.requirements}</p></div>`;
-            }
+            if (activity.description) modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Beschrijving</h4><p class="text-gray-700 leading-relaxed">${activity.description}</p></div>`;
+            if (activity.requirements) modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Vereisten</h4><p class="text-gray-700 leading-relaxed">${activity.requirements}</p></div>`;
 
             document.getElementById('modalContent').innerHTML = modalContent;
 
             const joinButton = document.getElementById('modalJoinButton');
+            const joinButtonText = document.getElementById('modalJoinButtonText');
             const isFull = activity.max_participants && activity.total_participants >= activity.max_participants;
 
             if (activity.is_enrolled) {
-                document.getElementById('modalJoinButtonText').textContent = 'Ingeschreven';
-                joinButton.className = 'px-6 py-2 bg-green-600 text-white rounded-lg cursor-not-allowed inline-flex items-center';
-                joinButton.disabled = true;
+                // Maak join button een uitschrijfbutton
+                joinButtonText.textContent = 'Uitschrijven';
+                joinButton.className = 'px-6 py-2 bg-red-600 text-white rounded-lg cursor-pointer inline-flex items-center';
+                joinButton.disabled = false; // Zorg dat hij klikbaar is
+
+                // Koppel de leave functie
+                joinButton.onclick = function(e) {
+                    e.stopPropagation(); // voorkom dat de modal sluit
+                    window.leaveActivityFromModal();
+                };
             } else if (isFull) {
-                document.getElementById('modalJoinButtonText').textContent = 'Vol';
+                joinButtonText.textContent = 'Vol';
                 joinButton.className = 'px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed inline-flex items-center';
                 joinButton.disabled = true;
             } else {
-                document.getElementById('modalJoinButtonText').textContent = 'Inschrijven';
+                joinButtonText.textContent = 'Inschrijven';
                 joinButton.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center';
                 joinButton.disabled = false;
             }
@@ -566,10 +557,33 @@
             document.body.style.overflow = 'hidden';
         };
 
+        // Functie uitschrijven
+        window.leaveActivityFromModal = function() {
+            if (!selectedActivityId) return;
+            if (!confirm('Weet je zeker dat je je wilt uitschrijven voor deze activiteit?')) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/activities/${selectedActivityId}/leave`;
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            form.appendChild(csrf);
+
+            const method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'DELETE';
+            form.appendChild(method);
+
+            document.body.appendChild(form);
+            form.submit();
+        };
         window.closeActivityModal = function() {
             document.getElementById('activityModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
-            selectedActivityId = null;
         };
 
         window.openParticipantModal = function(activityId) {
