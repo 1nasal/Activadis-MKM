@@ -9,29 +9,71 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow sm:rounded-lg overflow-hidden">
                 
-                <!-- Activity Images -->
+                <!-- Activity Images (met carousel) -->
                 @if($activity->images->count() > 0 || $activity->image)
                     <div class="mb-6">
                         @if($activity->images->count() > 0)
                             @if($activity->images->count() === 1)
-                                <img src="{{ $activity->images->first()->url }}" 
-                                     alt="{{ $activity->name }}" 
-                                     class="w-full h-64 object-cover">
+                                <!-- Single image: contain (geen crop) -->
+                                <div class="w-full h-64 md:h-80 bg-gray-100 flex items-center justify-center">
+                                    <img src="{{ $activity->images->first()->url }}" 
+                                         alt="{{ $activity->name }}" 
+                                         class="max-w-full max-h-full object-contain cursor-zoom-in"
+                                         onclick="openImageModal('{{ $activity->images->first()->url }}', '{{ $activity->images->first()->original_name }}')">
+                                </div>
                             @else
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                                    @foreach($activity->images as $image)
-                                        <div class="group cursor-pointer" onclick="openImageModal('{{ $image->url }}', '{{ $image->original_name }}')">
-                                            <img src="{{ $image->url }}" 
-                                                 alt="{{ $image->original_name }}" 
-                                                 class="w-full h-48 object-cover rounded-lg group-hover:opacity-90 transition-opacity">
-                                        </div>
-                                    @endforeach
+                                <!-- Carousel voor meerdere afbeeldingen -->
+                                <div id="detail-carousel" class="relative">
+                                    <div id="detail-carousel-track" class="relative w-full h-64 md:h-96 bg-gray-100 rounded-lg overflow-hidden">
+                                        @foreach($activity->images as $i => $image)
+                                            <img
+                                                src="{{ $image->url }}"
+                                                alt="{{ $image->original_name ?? $activity->name }}"
+                                                class="absolute inset-0 w-full h-full object-contain transition-opacity duration-300 {{ $i === 0 ? 'opacity-100' : 'opacity-0' }} cursor-zoom-in"
+                                                data-slide="{{ $i }}"
+                                                onclick="openImageModal('{{ $image->url }}', '{{ $image->original_name }}')"
+                                            >
+                                        @endforeach
+                                    </div>
+
+                                    <!-- Prev knop -->
+                                    <button type="button"
+                                            class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                                            onclick="detailCarouselPrev()" aria-label="Vorige">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
+
+                                    <!-- Next knop -->
+                                    <button type="button"
+                                            class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                                            onclick="detailCarouselNext()" aria-label="Volgende">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                        </svg>
+                                    </button>
+
+                                    <!-- Dots -->
+                                    <div id="detail-carousel-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                                        @foreach($activity->images as $i => $image)
+                                            <button type="button"
+                                                    class="w-2.5 h-2.5 rounded-full {{ $i === 0 ? 'bg-white' : 'bg-white/60' }} ring-1 ring-white/60 hover:bg-white"
+                                                    onclick="detailCarouselGoTo({{ $i }})"
+                                                    aria-label="Afbeelding {{ $i+1 }}">
+                                            </button>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endif
                         @elseif($activity->image)
-                            <img src="{{ $activity->image }}" 
-                                 alt="{{ $activity->name }}" 
-                                 class="w-full h-64 object-cover">
+                            <!-- Oude enkele image fallback -->
+                            <div class="w-full h-64 md:h-80 bg-gray-100 flex items-center justify-center">
+                                <img src="{{ $activity->image }}" 
+                                     alt="{{ $activity->name }}" 
+                                     class="max-w-full max-h-full object-contain cursor-zoom-in"
+                                     onclick="openImageModal('{{ $activity->image }}', '{{ $activity->name }}')">
+                            </div>
                         @endif
                     </div>
                 @endif
@@ -213,6 +255,7 @@
     </div>
 
     <script>
+        // ===== Lightbox (bestaand gedrag) =====
         function openImageModal(imageUrl, imageName) {
             document.getElementById('modalImage').src = imageUrl;
             document.getElementById('modalImage').alt = imageName;
@@ -226,9 +269,7 @@
         }
 
         document.getElementById('imageModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeImageModal();
-            }
+            if (e.target === this) closeImageModal();
         });
 
         document.addEventListener('keydown', function(e) {
@@ -236,5 +277,72 @@
                 closeImageModal();
             }
         });
+
+        // ===== Detail Carousel (zelfde stijl als elders, contain) =====
+        let __detailCarousel = { index: 0, total: 0, touchStartX: null };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('#detail-carousel-track [data-slide]');
+            if (!slides.length) return; // geen carousel nodig
+
+            __detailCarousel.total = slides.length;
+            __detailCarousel.index = 0;
+
+            // swipe
+            const track = document.getElementById('detail-carousel-track');
+            track.addEventListener('touchstart', (e) => {
+                __detailCarousel.touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+
+            track.addEventListener('touchend', (e) => {
+                if (__detailCarousel.touchStartX === null) return;
+                const delta = e.changedTouches[0].clientX - __detailCarousel.touchStartX;
+                __detailCarousel.touchStartX = null;
+                const threshold = 30;
+                if (delta > threshold) detailCarouselPrev();
+                if (delta < -threshold) detailCarouselNext();
+            }, { passive: true });
+
+            // keyboard
+            document.addEventListener('keydown', detailCarouselKeyHandler);
+        });
+
+        function detailCarouselKeyHandler(e) {
+            const modalOpen = !document.getElementById('imageModal').classList.contains('hidden');
+            if (modalOpen) return; // pijlen niet gebruiken als lightbox open is
+            if (e.key === 'ArrowRight') detailCarouselNext();
+            if (e.key === 'ArrowLeft') detailCarouselPrev();
+        }
+
+        function detailCarouselGoTo(i) {
+            if (__detailCarousel.total <= 1) return;
+            __detailCarousel.index = (i + __detailCarousel.total) % __detailCarousel.total;
+            renderDetailCarousel();
+        }
+
+        function detailCarouselNext() {
+            if (__detailCarousel.total <= 1) return;
+            __detailCarousel.index = (__detailCarousel.index + 1) % __detailCarousel.total;
+            renderDetailCarousel();
+        }
+
+        function detailCarouselPrev() {
+            if (__detailCarousel.total <= 1) return;
+            __detailCarousel.index = (__detailCarousel.index - 1 + __detailCarousel.total) % __detailCarousel.total;
+            renderDetailCarousel();
+        }
+
+        function renderDetailCarousel() {
+            const slides = document.querySelectorAll('#detail-carousel-track [data-slide]');
+            const dots   = document.querySelectorAll('#detail-carousel-dots > button');
+            slides.forEach((el, i) => {
+                el.classList.toggle('opacity-100', i === __detailCarousel.index);
+                el.classList.toggle('opacity-0',   i !== __detailCarousel.index);
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('bg-white', i === __detailCarousel.index);
+                dot.classList.toggle('bg-white/60', i !== __detailCarousel.index);
+            });
+        }
     </script>
 </x-app-layout>

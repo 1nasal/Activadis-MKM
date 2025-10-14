@@ -30,11 +30,6 @@
                     {{-- Gebruikersinformatie --}}
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-700">
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                            <span class="block text-sm text-gray-500">ID</span>
-                            <span class="font-medium">{{ $user->id }}</span>
-                        </div>
-
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
                             <span class="block text-sm text-gray-500">Voornaam</span>
                             <span class="font-medium">{{ $user->first_name }}</span>
                         </div>
