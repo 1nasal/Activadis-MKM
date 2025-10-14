@@ -34,7 +34,6 @@
                         </svg>
                     </a>
                 @endif
-                <!-- Hidden inputs to preserve sort parameters -->
                 @if(request('sort'))
                     <input type="hidden" name="sort" value="{{ request('sort') }}">
                 @endif
@@ -110,7 +109,6 @@
                     </div>
                 </div>
 
-                <!-- Results count -->
                 <span class="text-sm text-gray-600">
                     {{ $activities->total() }} activiteit{{ $activities->total() !== 1 ? 'en' : '' }}
                     @if(request('search'))
@@ -119,7 +117,6 @@
                 </span>
             </div>
 
-            <!-- Reset button -->
             @if(request()->has('sort') || request()->has('order') || request()->has('search'))
                 <a href="{{ url()->current() }}" class="text-sm text-blue-600 hover:text-blue-800 underline">
                     Reset filters
@@ -141,10 +138,9 @@
                         onclick="openActivityModal({{ $activity->id }})">
                         <div class="flex flex-col md:flex-row gap-6">
 
-                            <!-- Activity Images with Navigation (altijd iets tonen) -->
+                            <!-- LIST CARD IMAGES: keep object-cover -->
                             <div class="md:w-64 flex-shrink-0 relative">
                                 @if($activity->images->count() > 1)
-                                    <!-- Image carousel for multiple images -->
                                     <div class="relative group">
                                         <div class="image-carousel" id="carousel-{{ $activity->id }}">
                                             @foreach($activity->images as $index => $image)
@@ -155,35 +151,31 @@
                                             @endforeach
                                         </div>
 
-                                        <!-- Navigation buttons -->
                                         <button onclick="event.stopPropagation(); previousImage({{ $activity->id }})"
-                                                class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-75">
+                                                class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M15 19l-7-7 7-7"></path>
                                             </svg>
                                         </button>
                                         <button onclick="event.stopPropagation(); nextImage({{ $activity->id }})"
-                                                class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-opacity-75">
+                                                class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                       d="M9 5l7 7-7 7"></path>
                                             </svg>
                                         </button>
 
-                                        <!-- Image counter -->
                                         <div
-                                            class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                            class="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                                             <span id="counter-{{ $activity->id }}">1</span>/{{ $activity->images->count() }}
                                         </div>
                                     </div>
                                 @elseif($activity->images->count() === 1)
-                                    <!-- Single uploaded image -->
                                     <img src="{{ $activity->images->first()->url }}"
                                          alt="{{ $activity->images->first()->original_name }}"
                                          class="w-full h-48 object-cover rounded-lg border">
                                 @else
-                                    <!-- Placeholder uit storage via accessor -->
                                     <img src="{{ $activity->primary_image_url }}"
                                          alt="{{ $activity->name }}"
                                          class="w-full h-48 object-cover rounded-lg border">
@@ -318,7 +310,7 @@
                 <div class="mt-6 flex gap-4">
                     <button
                         id="modalJoinButton"
-                        onclick="openParticipantModalFromDetail()"
+                        onclick="openParticipantModalFromDetail()" type="button"
                         class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
                         <span id="modalJoinButtonText">Inschrijven</span>
                         <svg id="modalJoinSpinner" class="hidden animate-spin ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -393,12 +385,11 @@
         </div>
     </div>
 
-  <script>
+    <script>
         let selectedActivityId = null;
         let imageCounters = {};
         let activitiesData = {};
 
-        // Initialize data immediately
         @foreach($activities as $activity)
         activitiesData[{{ $activity->id }}] = {
             id: {{ $activity->id }},
@@ -414,13 +405,9 @@
             min_participants: {{ $activity->min_participants ?? 'null' }},
             images: [
                 @foreach($activity->images as $image)
-                {
-                    url: @json($image->url),
-                    name: @json($image->original_name)
-                },
+                { url: @json($image->url), name: @json($image->original_name) },
                 @endforeach
             ],
-            // Nieuw: altijd beschikbare placeholder via accessor
             primary_image_url: @json($activity->primary_image_url),
             total_participants: {{ $activity->users->count() + $activity->externals->count() }},
             is_enrolled: {{ auth()->check() && $activity->users->contains(auth()->id()) ? 'true' : 'false' }}
@@ -431,13 +418,12 @@
         @endif
         @endforeach
 
-        // Define all functions globally BEFORE DOMContentLoaded
+        // Join directly
         window.joinActivityDirectly = function(activityId) {
             const button = document.getElementById(`join-btn-${activityId}`);
             const textSpan = button.querySelector('.join-btn-text');
             const spinner = button.querySelector('.join-btn-spinner');
 
-            // Show loading state
             button.disabled = true;
             button.classList.add('opacity-75', 'cursor-not-allowed');
             textSpan.classList.add('hidden');
@@ -457,6 +443,7 @@
             form.submit();
         };
 
+        // Card mini-carousel (cover)
         window.nextImage = function(activityId) {
             const carousel = document.getElementById(`carousel-${activityId}`);
             const images = carousel.querySelectorAll('.carousel-image');
@@ -479,6 +466,7 @@
             counter.textContent = imageCounters[activityId] + 1;
         };
 
+        // ===== MODAL OPEN (carousel uses object-contain) =====
         window.openActivityModal = function(activityId) {
             const activity = activitiesData[activityId];
             if (!activity) return;
@@ -488,34 +476,74 @@
 
             let modalContent = '';
 
-            // Altijd een image laten zien (uploads > placeholder)
+            // IMAGES: single img or carousel (contain)
             modalContent += '<div class="mb-6">';
             if (activity.images.length > 0) {
                 if (activity.images.length === 1) {
-                    modalContent += `<img src="${activity.images[0].url}" alt="${activity.name}" class="w-full h-64 object-cover rounded-lg">`;
+                    modalContent += `
+                        <div class="w-full h-64 md:h-80 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                            <img src="${activity.images[0].url}" alt="${activity.images[0].name}"
+                                 class="max-h-full max-w-full object-contain">
+                        </div>
+                    `;
                 } else {
-                    modalContent += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
-                    activity.images.forEach(image => {
-                        modalContent += `<div class="group cursor-pointer" onclick="openImageModal('${image.url}', '${image.name}')">
-                                <img src="${image.url}" alt="${image.name}" class="w-full h-48 object-cover rounded-lg group-hover:opacity-90 transition-opacity">
-                            </div>`;
-                    });
-                    modalContent += '</div>';
+                    modalContent += `
+                        <div id="modal-carousel" class="relative rounded-lg overflow-hidden bg-gray-100">
+                            <div id="modal-carousel-track" class="relative w-full h-64 md:h-80">
+                                ${activity.images.map((img, i) => `
+                                    <img
+                                        src="${img.url}"
+                                        alt="${img.name ?? activity.name}"
+                                        class="absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${i === 0 ? 'opacity-100' : 'opacity-0'}"
+                                        data-slide="${i}">
+                                `).join('')}
+                            </div>
+
+                            <button type="button"
+                                class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                                onclick="modalCarouselPrev()" aria-label="Vorige">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+
+                            <button type="button"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                                onclick="modalCarouselNext()" aria-label="Volgende">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+
+                            <div id="modal-carousel-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                                ${activity.images.map((_, i) => `
+                                    <button type="button"
+                                        class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/50'} ring-1 ring-white/50 hover:bg-white"
+                                        onclick="modalCarouselGoTo(${i})" aria-label="Ga naar afbeelding ${i+1}">
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
                 }
             } else {
-                modalContent += `<img src="${activity.primary_image_url}" alt="${activity.name}" class="w-full h-64 object-cover rounded-lg">`;
+                modalContent += `
+                    <div class="w-full h-64 md:h-80 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                        <img src="${activity.primary_image_url}" alt="${activity.name}"
+                             class="max-h-full max-w-full object-contain">
+                    </div>
+                `;
             }
             modalContent += '</div>';
 
+            // DETAILS
             modalContent += '<div class="grid md:grid-cols-2 gap-8 mb-8">';
             modalContent += '<div class="space-y-4">';
             modalContent += `<div><strong class="text-gray-700">Locatie:</strong> <span class="ml-2">${activity.location}</span></div>`;
             modalContent += `<div><strong class="text-gray-700">Starttijd:</strong> <span class="ml-2">${activity.start_time}</span></div>`;
-
             if (activity.end_time) {
                 modalContent += `<div><strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span></div>`;
             }
-
             modalContent += `<div><strong class="text-gray-700">Kosten:</strong> <span class="ml-2">${activity.cost > 0 ? '€' + activity.cost.toFixed(2).replace('.', ',') : 'Gratis'}</span></div>`;
             modalContent += '</div>';
 
@@ -523,22 +551,18 @@
             if (activity.includes_food) {
                 modalContent += `<div>Eten inbegrepen</div>`;
             }
-
             if (activity.max_participants) {
                 modalContent += `<div><strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span></div>`;
             }
-
             if (activity.min_participants) {
                 modalContent += `<div><strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span></div>`;
             }
-
             modalContent += `<div><strong class="text-gray-700">Huidige deelnemers:</strong> <span class="ml-2">${activity.total_participants}</span></div>`;
             modalContent += '</div></div>';
 
             if (activity.description) {
                 modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Beschrijving</h4><p class="text-gray-700 leading-relaxed">${activity.description}</p></div>`;
             }
-
             if (activity.requirements) {
                 modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Vereisten</h4><p class="text-gray-700 leading-relaxed">${activity.requirements}</p></div>`;
             }
@@ -562,16 +586,26 @@
                 joinButton.disabled = false;
             }
 
+            if (activity.images.length > 1) {
+                initModalCarousel(activity.images.length);
+            }
+
             document.getElementById('activityModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         };
 
-        window.closeActivityModal = function() {
+        // ===== MODAL CLOSE =====
+        const _origCloseActivityModal = function() {
             document.getElementById('activityModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
             selectedActivityId = null;
         };
+        window.closeActivityModal = function() {
+            document.removeEventListener('keydown', modalCarouselKeyHandler);
+            _origCloseActivityModal();
+        };
 
+        // Participant modal
         window.openParticipantModal = function(activityId) {
             selectedActivityId = activityId;
             const form = document.getElementById('participantForm');
@@ -579,45 +613,39 @@
             document.getElementById('participantModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         };
-
         window.openParticipantModalFromDetail = function() {
             if (!selectedActivityId) return;
-
             @auth
-            // Show loading state on modal button
             const modalButton = document.getElementById('modalJoinButton');
             const modalButtonText = document.getElementById('modalJoinButtonText');
             const modalSpinner = document.getElementById('modalJoinSpinner');
-
             modalButton.disabled = true;
             modalButton.classList.add('opacity-75', 'cursor-not-allowed');
             modalButtonText.textContent = 'Bezig met inschrijven...';
             modalSpinner.classList.remove('hidden');
-
             joinActivityDirectly(selectedActivityId);
             @else
             openParticipantModal(selectedActivityId);
             @endauth
         };
-
         window.closeParticipantModal = function() {
             document.getElementById('participantModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
         };
 
+        // Image lightbox (still available)
         window.openImageModal = function(imageUrl, imageName) {
             document.getElementById('modalImage').src = imageUrl;
             document.getElementById('modalImage').alt = imageName;
             document.getElementById('imageModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         };
-
         window.closeImageModal = function() {
             document.getElementById('imageModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
         };
 
-        // DOM ready event listeners
+        // Sorting dropdown + modal close on backdrop + Esc
         document.addEventListener('DOMContentLoaded', function () {
             const sortButton = document.getElementById('sortDropdownButton');
             const sortMenu = document.getElementById('sortDropdownMenu');
@@ -635,23 +663,6 @@
                 });
             }
 
-            // Participant form submit handler
-            const participantForm = document.getElementById('participantForm');
-            if (participantForm) {
-                participantForm.addEventListener('submit', function(e) {
-                    const submitBtn = document.getElementById('participantFormSubmit');
-                    const btnText = document.getElementById('participantFormText');
-                    const btnSpinner = document.getElementById('participantFormSpinner');
-
-                    // Show loading state
-                    submitBtn.disabled = true;
-                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
-                    btnText.textContent = 'Bezig met inschrijven...';
-                    btnSpinner.classList.remove('hidden');
-                });
-            }
-
-            // Modal event listeners
             const activityModal = document.getElementById('activityModal');
             const participantModal = document.getElementById('participantModal');
             const imageModal = document.getElementById('imageModal');
@@ -661,20 +672,17 @@
                     if (e.target === this) closeActivityModal();
                 });
             }
-
             if (participantModal) {
                 participantModal.addEventListener('click', function (e) {
                     if (e.target === this) closeParticipantModal();
                 });
             }
-
             if (imageModal) {
                 imageModal.addEventListener('click', function (e) {
                     if (e.target === this) closeImageModal();
                 });
             }
 
-            // Keyboard event listeners
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') {
                     if (activityModal && !activityModal.classList.contains('hidden')) {
@@ -690,5 +698,68 @@
                 }
             });
         });
+
+        // ===== Modal Carousel Controller (global, contain) =====
+        let __modalCarousel = { index: 0, total: 0, touchStartX: null };
+
+        function initModalCarousel(total) {
+            __modalCarousel.index = 0;
+            __modalCarousel.total = total;
+            document.addEventListener('keydown', modalCarouselKeyHandler);
+
+            const track = document.getElementById('modal-carousel-track');
+            if (track) {
+                track.addEventListener('touchstart', (e) => {
+                    __modalCarousel.touchStartX = e.touches[0].clientX;
+                }, { passive: true });
+
+                track.addEventListener('touchend', (e) => {
+                    if (__modalCarousel.touchStartX === null) return;
+                    const delta = e.changedTouches[0].clientX - __modalCarousel.touchStartX;
+                    __modalCarousel.touchStartX = null;
+                    const threshold = 30;
+                    if (delta > threshold) modalCarouselPrev();
+                    if (delta < -threshold) modalCarouselNext();
+                }, { passive: true });
+            }
+        }
+
+        function modalCarouselKeyHandler(e) {
+            const modal = document.getElementById('activityModal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight') modalCarouselNext();
+            if (e.key === 'ArrowLeft') modalCarouselPrev();
+        }
+
+        function modalCarouselGoTo(i) {
+            if (__modalCarousel.total <= 0) return;
+            __modalCarousel.index = (i + __modalCarousel.total) % __modalCarousel.total;
+            renderModalCarousel();
+        }
+
+        function modalCarouselNext() {
+            if (__modalCarousel.total <= 0) return;
+            __modalCarousel.index = (__modalCarousel.index + 1) % __modalCarousel.total;
+            renderModalCarousel();
+        }
+
+        function modalCarouselPrev() {
+            if (__modalCarousel.total <= 0) return;
+            __modalCarousel.index = (__modalCarousel.index - 1 + __modalCarousel.total) % __modalCarousel.total;
+            renderModalCarousel();
+        }
+
+        function renderModalCarousel() {
+            const slides = document.querySelectorAll('#modal-carousel-track [data-slide]');
+            const dots   = document.querySelectorAll('#modal-carousel-dots > button');
+            slides.forEach((el, i) => {
+                el.classList.toggle('opacity-100', i === __modalCarousel.index);
+                el.classList.toggle('opacity-0',   i !== __modalCarousel.index);
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('bg-white', i === __modalCarousel.index);
+                dot.classList.toggle('bg-white/50', i !== __modalCarousel.index);
+            });
+        }
     </script>
 </x-app-layout>

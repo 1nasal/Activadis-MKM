@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'job_title',
+        'role'
     ];
 
     /**
@@ -33,6 +34,10 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+        protected $attributes = [
+        'role' => 'user', // default
     ];
 
     public function activities()
