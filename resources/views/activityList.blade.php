@@ -15,7 +15,6 @@
             </div>
         @endif
 
-        <!-- Zoekbalk -->
         <div class="mb-4">
             <form method="GET" action="{{ url()->current() }}" class="relative">
                 <input type="text"
@@ -43,10 +42,8 @@
             </form>
         </div>
 
-        <!-- Compacte Sorting Controls -->
         <div class="mb-6 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <!-- Sort Dropdown -->
                 <div class="relative">
                     <button id="sortDropdownButton" type="button"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-md">
@@ -55,10 +52,10 @@
                                   d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
                         </svg>
                         <span id="sortButtonText">
-                                @if($sortBy === 'start_time' && $sortOrder === 'asc')
-                                Datum (nieuw → oud)
+                            @if($sortBy === 'start_time' && $sortOrder === 'asc')
+                                Datum (vroeg → laat)
                             @elseif($sortBy === 'start_time' && $sortOrder === 'desc')
-                                Datum (oud → nieuw)
+                                Datum (laat → vroeg)
                             @elseif($sortBy === 'name' && $sortOrder === 'asc')
                                 Naam (A → Z)
                             @elseif($sortBy === 'name' && $sortOrder === 'desc')
@@ -70,7 +67,7 @@
                             @else
                                 Sorteer op
                             @endif
-                            </span>
+                        </span>
                         <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
@@ -81,11 +78,11 @@
                         <div class="py-1">
                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'asc']) }}"
                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ $sortBy === 'start_time' && $sortOrder === 'asc' ? 'bg-blue-50 text-blue-700' : '' }}">
-                                Datum (nieuw → oud)
+                                Datum (vroeg → laat)
                             </a>
                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'start_time', 'order' => 'desc']) }}"
                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {{ $sortBy === 'start_time' && $sortOrder === 'desc' ? 'bg-blue-50 text-blue-700' : '' }}">
-                                Datum (oud → nieuw)
+                                Datum (laat → vroeg)
                             </a>
                             <hr class="my-1">
                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'name', 'order' => 'asc']) }}"
@@ -137,8 +134,6 @@
                         class="bg-white border border-gray-200 p-6 hover:border-gray-300 transition-colors cursor-pointer"
                         onclick="openActivityModal({{ $activity->id }})">
                         <div class="flex flex-col md:flex-row gap-6">
-
-                            <!-- LIST CARD IMAGES: keep object-cover -->
                             <div class="md:w-64 flex-shrink-0 relative">
                                 @if($activity->images->count() > 1)
                                     <div class="relative group">
@@ -256,7 +251,6 @@
                                     </button>
                                 @endif
                             </div>
-
                         </div>
                     </article>
                 @endforeach
@@ -418,16 +412,16 @@
         @endif
         @endforeach
 
-        // Join directly
         window.joinActivityDirectly = function(activityId) {
             const button = document.getElementById(`join-btn-${activityId}`);
-            const textSpan = button.querySelector('.join-btn-text');
-            const spinner = button.querySelector('.join-btn-spinner');
-
-            button.disabled = true;
-            button.classList.add('opacity-75', 'cursor-not-allowed');
-            textSpan.classList.add('hidden');
-            spinner.classList.remove('hidden');
+            if (button) {
+                const textSpan = button.querySelector('.join-btn-text');
+                const spinner = button.querySelector('.join-btn-spinner');
+                button.disabled = true;
+                button.classList.add('opacity-75', 'cursor-not-allowed');
+                if (textSpan) textSpan.classList.add('hidden');
+                if (spinner) spinner.classList.remove('hidden');
+            }
 
             const form = document.createElement('form');
             form.method = 'POST';
@@ -443,7 +437,6 @@
             form.submit();
         };
 
-        // Card mini-carousel (cover)
         window.nextImage = function(activityId) {
             const carousel = document.getElementById(`carousel-${activityId}`);
             const images = carousel.querySelectorAll('.carousel-image');
@@ -466,7 +459,6 @@
             counter.textContent = imageCounters[activityId] + 1;
         };
 
-        // ===== MODAL OPEN (carousel uses object-contain) =====
         window.openActivityModal = function(activityId) {
             const activity = activitiesData[activityId];
             if (!activity) return;
@@ -475,8 +467,6 @@
             document.getElementById('modalActivityTitle').textContent = activity.name;
 
             let modalContent = '';
-
-            // IMAGES: single img or carousel (contain)
             modalContent += '<div class="mb-6">';
             if (activity.images.length > 0) {
                 if (activity.images.length === 1) {
@@ -536,54 +526,47 @@
             }
             modalContent += '</div>';
 
-            // DETAILS
             modalContent += '<div class="grid md:grid-cols-2 gap-8 mb-8">';
             modalContent += '<div class="space-y-4">';
             modalContent += `<div><strong class="text-gray-700">Locatie:</strong> <span class="ml-2">${activity.location}</span></div>`;
             modalContent += `<div><strong class="text-gray-700">Starttijd:</strong> <span class="ml-2">${activity.start_time}</span></div>`;
-            if (activity.end_time) {
-                modalContent += `<div><strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span></div>`;
-            }
+            if (activity.end_time) modalContent += `<div><strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span></div>`;
             modalContent += `<div><strong class="text-gray-700">Kosten:</strong> <span class="ml-2">${activity.cost > 0 ? '€' + activity.cost.toFixed(2).replace('.', ',') : 'Gratis'}</span></div>`;
             modalContent += '</div>';
 
             modalContent += '<div class="space-y-4">';
-            if (activity.includes_food) {
-                modalContent += `<div>Eten inbegrepen</div>`;
-            }
-            if (activity.max_participants) {
-                modalContent += `<div><strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span></div>`;
-            }
-            if (activity.min_participants) {
-                modalContent += `<div><strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span></div>`;
-            }
+            if (activity.includes_food) modalContent += `<div>Eten inbegrepen</div>`;
+            if (activity.max_participants) modalContent += `<div><strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span></div>`;
+            if (activity.min_participants) modalContent += `<div><strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span></div>`;
             modalContent += `<div><strong class="text-gray-700">Huidige deelnemers:</strong> <span class="ml-2">${activity.total_participants}</span></div>`;
             modalContent += '</div></div>';
 
-            if (activity.description) {
-                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Beschrijving</h4><p class="text-gray-700 leading-relaxed">${activity.description}</p></div>`;
-            }
-            if (activity.requirements) {
-                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Vereisten</h4><p class="text-gray-700 leading-relaxed">${activity.requirements}</p></div>`;
-            }
+            if (activity.description) modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Beschrijving</h4><p class="text-gray-700 leading-relaxed">${activity.description}</p></div>`;
+            if (activity.requirements) modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Vereisten</h4><p class="text-gray-700 leading-relaxed">${activity.requirements}</p></div>`;
 
             document.getElementById('modalContent').innerHTML = modalContent;
 
             const joinButton = document.getElementById('modalJoinButton');
+            const joinButtonText = document.getElementById('modalJoinButtonText');
             const isFull = activity.max_participants && activity.total_participants >= activity.max_participants;
 
             if (activity.is_enrolled) {
-                document.getElementById('modalJoinButtonText').textContent = 'Ingeschreven';
-                joinButton.className = 'px-6 py-2 bg-green-600 text-white rounded-lg cursor-not-allowed inline-flex items-center';
-                joinButton.disabled = true;
+                joinButtonText.textContent = 'Uitschrijven';
+                joinButton.className = 'px-6 py-2 bg-red-600 text-white rounded-lg cursor-pointer inline-flex items-center';
+                joinButton.disabled = false;
+                joinButton.onclick = function(e) {
+                    e.stopPropagation();
+                    window.leaveActivityFromModal();
+                };
             } else if (isFull) {
-                document.getElementById('modalJoinButtonText').textContent = 'Vol';
+                joinButtonText.textContent = 'Vol';
                 joinButton.className = 'px-6 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed inline-flex items-center';
                 joinButton.disabled = true;
             } else {
-                document.getElementById('modalJoinButtonText').textContent = 'Inschrijven';
+                joinButtonText.textContent = 'Inschrijven';
                 joinButton.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center';
                 joinButton.disabled = false;
+                joinButton.onclick = function() { openParticipantModalFromDetail(); };
             }
 
             if (activity.images.length > 1) {
@@ -594,18 +577,38 @@
             document.body.style.overflow = 'hidden';
         };
 
-        // ===== MODAL CLOSE =====
-        const _origCloseActivityModal = function() {
-            document.getElementById('activityModal').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            selectedActivityId = null;
-        };
-        window.closeActivityModal = function() {
-            document.removeEventListener('keydown', modalCarouselKeyHandler);
-            _origCloseActivityModal();
+        window.leaveActivityFromModal = function() {
+            if (!selectedActivityId) return;
+            if (!confirm('Weet je zeker dat je je wilt uitschrijven voor deze activiteit?')) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/activities/${selectedActivityId}/leave`;
+
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = '{{ csrf_token() }}';
+            form.appendChild(csrf);
+
+            const method = document.createElement('input');
+            method.type = 'hidden';
+            method.name = '_method';
+            method.value = 'DELETE';
+            form.appendChild(method);
+
+            document.body.appendChild(form);
+            form.submit();
         };
 
-        // Participant modal
+        window.closeActivityModal = function() {
+            const modal = document.getElementById('activityModal');
+            if (!modal) return;
+            document.removeEventListener('keydown', modalCarouselKeyHandler);
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        };
+
         window.openParticipantModal = function(activityId) {
             selectedActivityId = activityId;
             const form = document.getElementById('participantForm');
@@ -613,6 +616,7 @@
             document.getElementById('participantModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         };
+
         window.openParticipantModalFromDetail = function() {
             if (!selectedActivityId) return;
             @auth
@@ -628,12 +632,12 @@
             openParticipantModal(selectedActivityId);
             @endauth
         };
+
         window.closeParticipantModal = function() {
             document.getElementById('participantModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
         };
 
-        // Image lightbox (still available)
         window.openImageModal = function(imageUrl, imageName) {
             document.getElementById('modalImage').src = imageUrl;
             document.getElementById('modalImage').alt = imageName;
@@ -645,7 +649,6 @@
             document.body.style.overflow = 'auto';
         };
 
-        // Sorting dropdown + modal close on backdrop + Esc
         document.addEventListener('DOMContentLoaded', function () {
             const sortButton = document.getElementById('sortDropdownButton');
             const sortMenu = document.getElementById('sortDropdownMenu');
@@ -699,7 +702,7 @@
             });
         });
 
-        // ===== Modal Carousel Controller (global, contain) =====
+        // Modal carousel
         let __modalCarousel = { index: 0, total: 0, touchStartX: null };
 
         function initModalCarousel(total) {
