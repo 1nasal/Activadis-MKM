@@ -39,7 +39,6 @@
                                     </svg>
                                 </a>
                             @endif
-                            <!-- Hidden inputs to preserve sort parameters -->
                             @if(request('sort'))
                                 <input type="hidden" name="sort" value="{{ request('sort') }}">
                             @endif
@@ -167,7 +166,7 @@
                                                         </span>
 
                                                         <span class="flex items-center">
-                                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                             </svg>
@@ -214,14 +213,14 @@
         </div>
     </div>
 
-    <!-- Activity Details Modal -->
-    <div id="activityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-start justify-center p-4 pt-20">
-        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[calc(100vh-6rem)] overflow-y-auto transform transition-all">
-            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+    <!-- Activity Details Modal (ONLY THIS PART WAS CHANGED) -->
+    <div id="activityModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-start justify-center p-4 pt-20">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-6rem)] overflow-y-auto transform transition-all">
+            <div class="sticky top-0 bg-white/80 backdrop-blur border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
                 <h3 id="modalActivityTitle" class="text-xl font-semibold text-gray-900"></h3>
-                <button onclick="closeActivityModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <button onclick="closeActivityModal()" class="text-gray-400 hover:text-gray-600 transition">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
@@ -229,9 +228,14 @@
             <div class="p-6">
                 <div id="modalContent"></div>
 
-                <div class="mt-6 flex gap-4">
-                    <button id="modalLeaveButton" onclick="leaveActivityFromModal()" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <button id="modalLeaveButton" onclick="leaveActivityFromModal()" type="button"
+                            class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center">
                         Uitschrijven
+                    </button>
+                    <button onclick="closeActivityModal()" type="button"
+                            class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                        Sluiten
                     </button>
                 </div>
             </div>
@@ -251,6 +255,7 @@
     <script>
         let selectedActivityId = null;
         let activitiesData = {};
+        let __modalCarousel = { index: 0, total: 0, touchStartX: null };
 
         @foreach($activities as $activity)
         activitiesData[{{ $activity->id }}] = {
@@ -276,84 +281,124 @@
         };
         @endforeach
 
+        // OPEN MODAL (redesigned content but ONLY used here)
         window.openActivityModal = function(activityId) {
-            const activity = activitiesData[activityId];
-            if (!activity) return;
+            const a = activitiesData[activityId];
+            if (!a) return;
 
             selectedActivityId = activityId;
-            document.getElementById('modalActivityTitle').textContent = activity.name;
+            document.getElementById('modalActivityTitle').textContent = a.name;
 
-            let modalContent = '';
+            let html = '';
 
-            if (activity.images.length > 0 || activity.primary_image) {
-                modalContent += '<div class="mb-6">';
-                if (activity.images.length > 0) {
-                    if (activity.images.length === 1) {
-                        modalContent += `<img src="${activity.images[0].url}" alt="${activity.name}" class="w-full h-64 object-cover rounded-lg">`;
-                    } else {
-                        modalContent += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">';
-                        activity.images.forEach(image => {
-                            modalContent += `<div class="group cursor-pointer" onclick="openImageModal('${image.url}', '${image.name}')">
-                                <img src="${image.url}" alt="${image.name}" class="w-full h-48 object-cover rounded-lg group-hover:opacity-90 transition-opacity">
-                            </div>`;
-                        });
-                        modalContent += '</div>';
-                    }
-                } else if (activity.primary_image) {
-                    modalContent += `<img src="${activity.primary_image}" alt="${activity.name}" class="w-full h-64 object-cover rounded-lg">`;
+            // Images
+            html += '<div class="mb-6">';
+            if (a.images && a.images.length > 0) {
+                if (a.images.length === 1) {
+                    html += `
+                        <div class="w-full h-64 md:h-80 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-gray-100">
+                            <img src="${a.images[0].url}" alt="${a.images[0].name ?? a.name}" class="max-h-full max-w-full object-contain">
+                        </div>`;
+                } else {
+                    html += `
+                        <div id="modal-carousel" class="relative rounded-xl overflow-hidden bg-gray-50 ring-1 ring-gray-100">
+                            <div id="modal-carousel-track" class="relative w-full h-64 md:h-80">
+                                ${a.images.map((img, i) => `
+                                    <img src="${img.url}" alt="${img.name ?? a.name}"
+                                         class="absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${i===0?'opacity-100':'opacity-0'}"
+                                         data-slide="${i}">
+                                `).join('')}
+                            </div>
+                            <button type="button" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                                    onclick="modalCarouselPrev()" aria-label="Vorige">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                            <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-9 h-9 flex items-center justify-center"
+                                    onclick="modalCarouselNext()" aria-label="Volgende">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
+                            </button>
+                            <div id="modal-carousel-dots" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                                ${a.images.map((_, i) => `
+                                    <button type="button" class="w-2.5 h-2.5 rounded-full ${i===0?'bg-white':'bg-white/50'} ring-1 ring-white/50 hover:bg-white"
+                                            onclick="modalCarouselGoTo(${i})" aria-label="Ga naar afbeelding ${i+1}"></button>
+                                `).join('')}
+                            </div>
+                        </div>`;
                 }
-                modalContent += '</div>';
+            } else if (a.primary_image) {
+                html += `
+                    <div class="w-full h-64 md:h-80 bg-gray-50 rounded-xl overflow-hidden flex items-center justify-center ring-1 ring-gray-100">
+                        <img src="${a.primary_image}" alt="${a.name}" class="max-h-full max-w-full object-contain">
+                    </div>`;
             }
+            html += '</div>';
 
-            modalContent += '<div class="grid md:grid-cols-2 gap-8 mb-8">';
-            modalContent += '<div class="space-y-4">';
-            modalContent += `<div><strong class="text-gray-700">Locatie:</strong> <span class="ml-2">${activity.location}</span></div>`;
-            modalContent += `<div><strong class="text-gray-700">Starttijd:</strong> <span class="ml-2">${activity.start_time}</span></div>`;
-            if (activity.end_time) {
-                modalContent += `<div><strong class="text-gray-700">Eindtijd:</strong> <span class="ml-2">${activity.end_time}</span></div>`;
-            }
-            modalContent += `<div><strong class="text-gray-700">Kosten:</strong> <span class="ml-2">${activity.cost > 0 ? '€' + activity.cost.toFixed(2).replace('.', ',') : 'Gratis'}</span></div>`;
-            modalContent += '</div>';
+            // Badges
+            html += `
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <span class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700">Locatie: ${a.location}</span>
+                    <span class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700">Start: ${a.start_time}</span>
+                    ${a.end_time ? `<span class="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-xs text-gray-700">Einde: ${a.end_time}</span>` : ''}
+                    <span class="inline-flex items-center rounded-full px-3 py-1 text-xs ${a.cost > 0 ? 'border border-blue-200 text-blue-700' : 'border border-green-200 text-green-700'}">
+                        ${a.cost > 0 ? ('€' + Number(a.cost).toFixed(2).replace('.', ',')) : 'Gratis'}
+                    </span>
+                    ${a.includes_food ? `<span class="inline-flex items-center rounded-full border border-emerald-200 text-emerald-700 px-3 py-1 text-xs">Eten inbegrepen</span>` : ''}
+                </div>
+            `;
 
-            modalContent += '<div class="space-y-4">';
-            if (activity.includes_food) {
-                modalContent += `<div>Eten inbegrepen</div>`;
-            }
-            if (activity.max_participants) {
-                modalContent += `<div><strong class="text-gray-700">Maximaal aantal deelnemers:</strong> <span class="ml-2">${activity.max_participants}</span></div>`;
-            }
-            if (activity.min_participants) {
-                modalContent += `<div><strong class="text-gray-700">Minimaal aantal deelnemers:</strong> <span class="ml-2">${activity.min_participants}</span></div>`;
-            }
-            modalContent += `<div><strong class="text-gray-700">Huidige deelnemers:</strong> <span class="ml-2">${activity.total_participants}</span></div>`;
-            modalContent += '</div></div>';
+            // Info grid
+            html += `
+                <div class="grid md:grid-cols-2 gap-6 mb-8">
+                    <div class="space-y-4">
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">Capaciteit</div>
+                            <div class="text-gray-800">
+                                Huidig: <span class="font-medium">${a.total_participants ?? 0}</span>
+                                ${a.max_participants ? `/ <span class="font-medium">${a.max_participants}</span>` : ''}
+                            </div>
+                            ${a.min_participants ? `<div class="text-gray-700">Minimaal: <span class="font-medium">${a.min_participants}</span></div>` : ''}
+                        </div>
+                        ${a.requirements ? `
+                        <div class="rounded-xl border border-gray-100 p-4">
+                            <div class="text-xs uppercase tracking-wide text-gray-500 mb-1">Vereisten</div>
+                            <div class="prose prose-sm max-w-none text-gray-700">${a.requirements}</div>
+                        </div>` : ''}
+                    </div>
+                    <div class="rounded-xl border border-gray-100 p-4 h-full">
+                        <div class="text-xs uppercase tracking-wide text-gray-500 mb-2">Beschrijving</div>
+                        <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">
+                            ${a.description ? a.description : 'Geen beschrijving beschikbaar.'}
+                        </div>
+                    </div>
+                </div>
+            `;
 
-            if (activity.description) {
-                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Beschrijving</h4><p class="text-gray-700 leading-relaxed">${activity.description}</p></div>`;
-            }
-            if (activity.requirements) {
-                modalContent += `<div class="mb-8"><h4 class="text-xl font-semibold mb-3">Vereisten</h4><p class="text-gray-700 leading-relaxed">${activity.requirements}</p></div>`;
-            }
+            document.getElementById('modalContent').innerHTML = html;
 
-            document.getElementById('modalContent').innerHTML = modalContent;
-
-            const leaveButton = document.getElementById('modalLeaveButton');
-            if (activity.is_past) {
-                leaveButton.style.display = 'none';
+            const leaveBtn = document.getElementById('modalLeaveButton');
+            if (a.is_past) {
+                leaveBtn.classList.add('hidden');
+                leaveBtn.disabled = true;
             } else {
-                leaveButton.style.display = 'block';
+                leaveBtn.classList.remove('hidden');
+                leaveBtn.disabled = false;
             }
+
+            if (a.images && a.images.length > 1) initModalCarousel(a.images.length);
 
             document.getElementById('activityModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         };
 
+        // Close modal
         window.closeActivityModal = function() {
             document.getElementById('activityModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
+            document.removeEventListener('keydown', modalCarouselKeyHandler);
             selectedActivityId = null;
         };
 
+        // Leave action from modal
         window.leaveActivityFromModal = function() {
             if (!selectedActivityId) return;
             if (!confirm('Weet je zeker dat je je wilt uitschrijven voor deze activiteit?')) return;
@@ -378,18 +423,75 @@
             form.submit();
         };
 
+        // Image lightbox (used by modal grid when needed)
         window.openImageModal = function(imageUrl, imageName) {
             document.getElementById('modalImage').src = imageUrl;
-            document.getElementById('modalImage').alt = imageName;
+            document.getElementById('modalImage').alt = imageName || '';
             document.getElementById('imageModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         };
-
         window.closeImageModal = function() {
             document.getElementById('imageModal').classList.add('hidden');
             document.body.style.overflow = 'auto';
         };
 
+        // Modal carousel helpers
+        function initModalCarousel(total) {
+            __modalCarousel.index = 0;
+            __modalCarousel.total = total;
+            document.addEventListener('keydown', modalCarouselKeyHandler);
+
+            const track = document.getElementById('modal-carousel-track');
+            if (track) {
+                track.addEventListener('touchstart', (e) => {
+                    __modalCarousel.touchStartX = e.touches[0].clientX;
+                }, { passive: true });
+
+                track.addEventListener('touchend', (e) => {
+                    if (__modalCarousel.touchStartX === null) return;
+                    const delta = e.changedTouches[0].clientX - __modalCarousel.touchStartX;
+                    __modalCarousel.touchStartX = null;
+                    const threshold = 30;
+                    if (delta > threshold) modalCarouselPrev();
+                    if (delta < -threshold) modalCarouselNext();
+                }, { passive: true });
+            }
+        }
+        function modalCarouselKeyHandler(e) {
+            const modal = document.getElementById('activityModal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight') modalCarouselNext();
+            if (e.key === 'ArrowLeft') modalCarouselPrev();
+        }
+        function modalCarouselGoTo(i) {
+            if (__modalCarousel.total <= 0) return;
+            __modalCarousel.index = (i + __modalCarousel.total) % __modalCarousel.total;
+            renderModalCarousel();
+        }
+        function modalCarouselNext() {
+            if (__modalCarousel.total <= 0) return;
+            __modalCarousel.index = (__modalCarousel.index + 1) % __modalCarousel.total;
+            renderModalCarousel();
+        }
+        function modalCarouselPrev() {
+            if (__modalCarousel.total <= 0) return;
+            __modalCarousel.index = (__modalCarousel.index - 1 + __modalCarousel.total) % __modalCarousel.total;
+            renderModalCarousel();
+        }
+        function renderModalCarousel() {
+            const slides = document.querySelectorAll('#modal-carousel-track [data-slide]');
+            const dots   = document.querySelectorAll('#modal-carousel-dots > button');
+            slides.forEach((el, i) => {
+                el.classList.toggle('opacity-100', i === __modalCarousel.index);
+                el.classList.toggle('opacity-0',   i !== __modalCarousel.index);
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('bg-white', i === __modalCarousel.index);
+                dot.classList.toggle('bg-white/50', i !== __modalCarousel.index);
+            });
+        }
+
+        // Misc events (unchanged)
         document.addEventListener('DOMContentLoaded', function() {
             const sortButton = document.getElementById('sortDropdownButton');
             const sortMenu = document.getElementById('sortDropdownMenu');
