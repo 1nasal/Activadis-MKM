@@ -13,11 +13,13 @@ class ActivityJoinedMail extends Mailable
 
     public $activity;
     public $name;
+    public $leaveToken;
 
-    public function __construct(Activity $activity, $name)
+    public function __construct(Activity $activity, $name, $leaveToken = null)
     {
         $this->activity = $activity;
         $this->name = $name;
+        $this->leaveToken = $leaveToken;
     }
 
     public function build()

@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ActivityConfirmationMail;
 use App\Models\Activity;
 use App\Models\ActivityImage;
 use Illuminate\Http\Request;
@@ -281,15 +282,39 @@ class ActivityController extends Controller
                 ]
             );
 
-            if ($activity->externals()->where('external_id', $external->id)->exists()) {
+            if (
+                $activity->externals()
+                    ->where('externals.id', $external->id)
+                    ->wherePivot('confirmed', true)
+                    ->exists()
+            ) {
                 return back()->with('error', 'Je bent al ingeschreven voor deze activiteit als externe.');
             }
 
-            $activity->externals()->attach($external->id);
+            $existing = $activity->externals()
+                ->where('externals.id', $external->id)
+                ->wherePivot('confirmed', false)
+                ->first();
 
-            Mail::to($external->email)->send(new ActivityJoinedMail($activity, $external->first_name));
+            $token = Str::random(32);
 
-            return back()->with('success', 'Je bent nu ingeschreven voor de activiteit!');
+            if ($existing) {
+                $activity->externals()->updateExistingPivot($external->id, [
+                    'confirmation_token' => $token,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                // Create new pending registration
+                $activity->externals()->attach($external->id, [
+                    'confirmed' => false,
+                    'confirmation_token' => $token,
+                ]);
+            }
+
+            Mail::to($external->email)->send(new ActivityConfirmationMail($activity, $external, $token));
+
+            return back()->with('success', 'Nieuwe bevestigingsmail is verstuurd! Check je inbox om je inschrijving te bevestigen.');
         }
 
         $user = Auth::user();
@@ -361,5 +386,49 @@ class ActivityController extends Controller
         $activity->users()->detach($user->id);
 
         return back()->with('success', 'Je bent uitgeschreven voor de activiteit.');
+    }
+
+    public function confirm($token)
+    {
+        $pivot = \DB::table('activity_external')->where('confirmation_token', $token)->first();
+
+        if (!$pivot) {
+            return redirect('/')->with('error', 'Ongeldige bevestigingslink.');
+        }
+
+        $leaveToken = Str::random(32);
+
+        $external = \App\Models\External::find($pivot->external_id);
+        $activity = \App\Models\Activity::find($pivot->activity_id);
+
+        Mail::to($external->email)
+            ->send(new ActivityJoinedMail($activity, $external->first_name, $leaveToken));
+
+        \DB::table('activity_external')
+            ->where('id', $pivot->id)
+            ->update([
+                'confirmed' => true,
+                'confirmation_token' => null,
+                'leave_token' => $leaveToken
+            ]);
+
+        return redirect('/')->with('success', 'Je inschrijving is bevestigd! Je ontvangt een mail met je deelname en een uitschrijf link.');
+    }
+
+    public function leaveExternal($token)
+    {
+        $pivot = \DB::table('activity_external')->where('leave_token', $token)->first();
+
+        if (!$pivot) {
+            return redirect('/')->with('error', 'Ongeldige uitschrijflink.');
+        }
+
+        $external = \App\Models\External::find($pivot->external_id);
+        $activity = \App\Models\Activity::find($pivot->activity_id);
+
+        // verwijder de koppeling
+        \DB::table('activity_external')->where('id', $pivot->id)->delete();
+
+        return redirect('/')->with('success', 'Je bent uitgeschreven voor de activiteit: ' . $activity->name);
     }
 }

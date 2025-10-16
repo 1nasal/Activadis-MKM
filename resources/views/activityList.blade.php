@@ -18,8 +18,8 @@
         <!-- Zoekbalk -->
         <div class="mb-4">
             <form method="GET" action="{{ url()->current() }}" class="relative">
-                <input type="text" 
-                       name="search" 
+                <input type="text"
+                       name="search"
                        value="{{ request('search') }}"
                        placeholder="Zoek op titel, beschrijving of locatie..."
                        class="w-full px-4 py-3 pl-11 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -27,7 +27,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
                 @if(request('search'))
-                    <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}" 
+                    <a href="{{ request()->fullUrlWithQuery(['search' => null]) }}"
                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -131,11 +131,16 @@
             <div class="space-y-4">
                 @foreach($activities as $activity)
                     @php
-                        $totalParticipants = $activity->users->count() + $activity->externals->count();
+                        $confirmedExternalsCount = $activity->externals()
+                            ->wherePivot('confirmed', true)
+                            ->count();
+
+                        $totalParticipants = $activity->users->count() + $confirmedExternalsCount;
+
                         $isFull = $activity->max_participants && $totalParticipants >= $activity->max_participants;
                         $isEnrolled = auth()->check() && $activity->users->contains(auth()->id());
                     @endphp
-                    
+
                     <article
                         class="bg-white border border-gray-200 p-6 hover:border-gray-300 transition-colors cursor-pointer"
                         onclick="openActivityModal({{ $activity->id }})">
