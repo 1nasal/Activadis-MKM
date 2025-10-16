@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ActivityConfirmationMail;
 use App\Models\Activity;
 use App\Models\ActivityImage;
 use Illuminate\Http\Request;
@@ -353,15 +354,39 @@ class ActivityController extends Controller
                 ]
             );
 
-            if ($activity->externals()->where('external_id', $external->id)->exists()) {
+            if (
+                $activity->externals()
+                    ->where('externals.id', $external->id)
+                    ->wherePivot('confirmed', true)
+                    ->exists()
+            ) {
                 return back()->with('error', 'Je bent al ingeschreven voor deze activiteit als externe.');
             }
 
-            $activity->externals()->attach($external->id);
+            $existing = $activity->externals()
+                ->where('externals.id', $external->id)
+                ->wherePivot('confirmed', false)
+                ->first();
 
-            Mail::to($external->email)->send(new ActivityJoinedMail($activity, $external->first_name));
+            $token = Str::random(32);
 
-            return back()->with('success', 'Je bent nu ingeschreven voor de activiteit!');
+            if ($existing) {
+                $activity->externals()->updateExistingPivot($external->id, [
+                    'confirmation_token' => $token,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                // Create new pending registration
+                $activity->externals()->attach($external->id, [
+                    'confirmed' => false,
+                    'confirmation_token' => $token,
+                ]);
+            }
+
+            Mail::to($external->email)->send(new ActivityConfirmationMail($activity, $external, $token));
+
+            return back()->with('success', 'Nieuwe bevestigingsmail is verstuurd! Check je inbox om je inschrijving te bevestigen.');
         }
 
         $user = Auth::user();
@@ -435,59 +460,103 @@ class ActivityController extends Controller
         return back()->with('success', 'Je bent uitgeschreven voor de activiteit.');
     }
 
-public function duplicate(Activity $activity)
-{
-    $activity->load('images');
+    public function confirm($token)
+    {
+        $pivot = \DB::table('activity_external')->where('confirmation_token', $token)->first();
 
-    $prefill = [
-        'name'             => $activity->name,
-        'location'         => $activity->location,
-        'includes_food'    => (bool) $activity->includes_food,
-        'description'      => $activity->description,
-        'start_time'       => $activity->start_time,
-        'end_time'         => $activity->end_time,
-        'cost'             => $activity->cost,
-        'max_participants' => $activity->max_participants,
-        'min_participants' => $activity->min_participants,
-        'image'            => $activity->image,
-        'requirements'     => $activity->requirements,
-    ];
-
-    $tempImages  = $this->stageImagesAsTemp($activity);
-    $duplicateOf = $activity->id;
-
-    // prevent stale "old()" from overriding our prefill
-    session()->forget('_old_input');
-    session()->forget('errors');
-
-    return view('activity.create', compact('prefill', 'tempImages', 'duplicateOf'));
-}
-
-
-/**
- * Copy Activity images to public/tmp/{uuid}/ and return their tmp paths.
- */
-private function stageImagesAsTemp(Activity $activity): array
-{
-    $disk = Storage::disk('public');
-    $uuid = (string) Str::uuid();
-    $baseTmp = "tmp/{$uuid}";
-
-    $disk->makeDirectory($baseTmp);
-    $paths = [];
-
-    foreach ($activity->images as $img) {
-        if (!$img->path || !$disk->exists($img->path)) {
-            continue;
+        if (!$pivot) {
+            return redirect('/')->with('error', 'Ongeldige bevestigingslink.');
         }
-        $tmpFilename = $img->filename ?: (Str::uuid() . '.jpg');
-        $tmpPath = "{$baseTmp}/{$tmpFilename}";
 
-        // copy original to tmp
-        $disk->copy($img->path, $tmpPath);
-        $paths[] = $tmpPath;
+        $leaveToken = Str::random(32);
+
+        $external = \App\Models\External::find($pivot->external_id);
+        $activity = \App\Models\Activity::find($pivot->activity_id);
+
+        Mail::to($external->email)
+            ->send(new ActivityJoinedMail($activity, $external->first_name, $leaveToken));
+
+        \DB::table('activity_external')
+            ->where('id', $pivot->id)
+            ->update([
+                'confirmed' => true,
+                'confirmation_token' => null,
+                'leave_token' => $leaveToken
+            ]);
+
+        return redirect('/')->with('success', 'Je inschrijving is bevestigd! Je ontvangt een mail met je deelname en een uitschrijf link.');
     }
 
-    return $paths;
-}
+    public function leaveExternal($token)
+    {
+        $pivot = \DB::table('activity_external')->where('leave_token', $token)->first();
+
+        if (!$pivot) {
+            return redirect('/')->with('error', 'Ongeldige uitschrijflink.');
+        }
+
+        $external = \App\Models\External::find($pivot->external_id);
+        $activity = \App\Models\Activity::find($pivot->activity_id);
+
+        // verwijder de koppeling
+        \DB::table('activity_external')->where('id', $pivot->id)->delete();
+
+        return redirect('/')->with('success', 'Je bent uitgeschreven voor de activiteit: ' . $activity->name);
+    }
+  
+    public function duplicate(Activity $activity)
+    {
+        $activity->load('images');
+
+        $prefill = [
+            'name'             => $activity->name,
+            'location'         => $activity->location,
+            'includes_food'    => (bool) $activity->includes_food,
+            'description'      => $activity->description,
+            'start_time'       => $activity->start_time,
+            'end_time'         => $activity->end_time,
+            'cost'             => $activity->cost,
+            'max_participants' => $activity->max_participants,
+            'min_participants' => $activity->min_participants,
+            'image'            => $activity->image,
+            'requirements'     => $activity->requirements,
+        ];
+
+        $tempImages  = $this->stageImagesAsTemp($activity);
+        $duplicateOf = $activity->id;
+
+        // prevent stale "old()" from overriding our prefill
+        session()->forget('_old_input');
+        session()->forget('errors');
+
+        return view('activity.create', compact('prefill', 'tempImages', 'duplicateOf'));
+    }
+
+
+    /**
+     * Copy Activity images to public/tmp/{uuid}/ and return their tmp paths.
+     */
+    private function stageImagesAsTemp(Activity $activity): array
+    {
+        $disk = Storage::disk('public');
+        $uuid = (string) Str::uuid();
+        $baseTmp = "tmp/{$uuid}";
+
+        $disk->makeDirectory($baseTmp);
+        $paths = [];
+
+        foreach ($activity->images as $img) {
+            if (!$img->path || !$disk->exists($img->path)) {
+                continue;
+            }
+            $tmpFilename = $img->filename ?: (Str::uuid() . '.jpg');
+            $tmpPath = "{$baseTmp}/{$tmpFilename}";
+
+            // copy original to tmp
+            $disk->copy($img->path, $tmpPath);
+            $paths[] = $tmpPath;
+        }
+
+        return $paths;
+    }
 }
