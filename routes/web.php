@@ -77,7 +77,6 @@ Route::prefix('activities')->name('activities.')->group(function () {
 
     // Generic show route LAST
     Route::get('/{activity}', [ActivityController::class, 'show'])->name('show')->whereNumber('activity');
-  });
 });
 
 require __DIR__.'/auth.php';
