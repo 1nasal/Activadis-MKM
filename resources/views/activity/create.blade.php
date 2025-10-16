@@ -1,4 +1,28 @@
-{{-- filepath: resources/views/activity/create.blade.php --}}
+{{-- resources/views/activity/create.blade.php --}}
+@php
+    use Illuminate\Support\Facades\Storage;
+
+    $prefill     = $prefill     ?? [];
+    $tempImages  = $tempImages  ?? [];
+    $hasOld      = session()->has('_old_input');
+
+    $val = function ($field, $default = '') use ($prefill, $hasOld) {
+        return $hasOld ? old($field, $default) : ($prefill[$field] ?? $default);
+    };
+
+    $fmtDT = function ($value) {
+        if (!$value) return '';
+        try { return \Illuminate\Support\Carbon::parse($value)->format('Y-m-d\TH:i'); }
+        catch (\Throwable $e) { return ''; }
+    };
+
+    $initialTempPaths = $hasOld ? (array) old('temp_images', []) : (array) $tempImages;
+    $initialTemp = collect($initialTempPaths)->map(fn($p) => [
+        'path' => $p,
+        'url'  => asset('storage/'.$p),
+    ]);
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -9,101 +33,113 @@
     <div class="py-12">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white p-6 rounded shadow">
-                <form method="POST" action="{{ route('activities.store') }}" enctype="multipart/form-data">
+
+                @if ($errors->any())
+                    <div class="mb-4 p-3 rounded border border-red-200 bg-red-50 text-red-700">
+                        <ul class="list-disc list-inside">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('activities.store') }}" enctype="multipart/form-data" id="activityCreateForm">
                     @csrf
 
                     <div class="mb-4">
                         <label class="block font-medium" for="name">Naam</label>
-                        <input class="w-full border rounded p-2" type="text" name="name" id="name" value="{{ old('name') }}" required>
+                        <input class="w-full border rounded p-2" type="text" name="name" id="name" value="{{ $val('name') }}" required>
                         @error('name') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block font-medium" for="location">Locatie</label>
-                        <input class="w-full border rounded p-2" type="text" name="location" id="location" value="{{ old('location') }}" required>
+                        <input class="w-full border rounded p-2" type="text" name="location" id="location" value="{{ $val('location') }}" required>
                         @error('location') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="block font-medium" for="includes_food">Inclusief Eten</label>
-                        <select class="w-full border rounded p-2" name="includes_food" id="includes_food" required>
-                            <option value="1" {{ old('includes_food') == '1' ? 'selected' : '' }}>Ja</option>
-                            <option value="0" {{ old('includes_food') == '0' ? 'selected' : '' }}>Nee</option>
-                        </select>
+                        <input type="hidden" name="includes_food" value="0">
+                        <label class="inline-flex items-center gap-2">
+                            <input class="w-4 h-4" type="checkbox" name="includes_food" id="includes_food" value="1"
+                                   {{ (bool)$val('includes_food', false) ? 'checked' : '' }}>
+                            <span class="font-medium">Inclusief eten</span>
+                        </label>
                         @error('includes_food') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block font-medium" for="description">Beschrijving</label>
-                        <textarea class="w-full border rounded p-2" name="description" id="description" required>{{ old('description') }}</textarea>
+                        <textarea class="w-full border rounded p-2" name="description" id="description" required>{{ $val('description') }}</textarea>
                         @error('description') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- Start- en eindtijd (geen verleden toegestaan) --}}
                     <div class="mb-4">
                         <label class="block font-medium" for="start_time">Starttijd</label>
-                        <input class="w-full border rounded p-2" type="datetime-local" name="start_time" id="start_time" value="{{ old('start_time') }}" required>
+                        <input class="w-full border rounded p-2" type="datetime-local" name="start_time" id="start_time" value="{{ $fmtDT($val('start_time')) }}" required>
                         @error('start_time') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block font-medium" for="end_time">Eindtijd</label>
-                        <input class="w-full border rounded p-2" type="datetime-local" name="end_time" id="end_time" value="{{ old('end_time') }}" required>
+                        <input class="w-full border rounded p-2" type="datetime-local" name="end_time" id="end_time" value="{{ $fmtDT($val('end_time')) }}" required>
                         @error('end_time') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="block font-medium" for="cost">Kosten</label>
-                        <input class="w-full border rounded p-2" type="number" step="0.01" name="cost" id="cost" value="{{ old('cost') }}" required>
+                        <label class="block font-medium" for="cost">Kosten (€)</label>
+                        <input class="w-full border rounded p-2" type="number" step="0.01" name="cost" id="cost" value="{{ $val('cost') }}" required>
                         @error('cost') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- Max en min deelnemers met JS-validatie --}}
                     <div class="mb-4">
-                        <label class="block font-medium" for="max_participants">Maximaal Aantal Deelnemers</label>
-                        <input class="w-full border rounded p-2" type="number" name="max_participants" id="max_participants" value="{{ old('max_participants') }}">
+                        <label class="block font-medium" for="max_participants">Maximaal aantal deelnemers</label>
+                        <input class="w-full border rounded p-2" type="number" name="max_participants" id="max_participants" value="{{ $val('max_participants') }}" min="1" required>
                         @error('max_participants') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
-                        <label class="block font-medium" for="min_participants">Minimaal Aantal Deelnemers</label>
-                        <input class="w-full border rounded p-2" type="number" name="min_participants" id="min_participants" value="{{ old('min_participants') }}">
+                        <label class="block font-medium" for="min_participants">Minimaal aantal deelnemers</label>
+                        <input class="w-full border rounded p-2" type="number" name="min_participants" id="min_participants" value="{{ $val('min_participants') }}" min="1" required>
+                        <div id="participantsError" class="text-red-500 text-sm hidden">Minimaal aantal mag niet hoger zijn dan maximaal aantal.</div>
                         @error('min_participants') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- Afbeeldingen upload --}}
                     <div class="mb-4">
-                        <label class="block font-medium mb-2" for="images">Afbeeldingen</label>
-                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6" id="upload-area">
-                            <div class="text-center">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="mt-4">
-                                    <label for="images" class="cursor-pointer">
-                                        <span class="mt-2 block text-sm font-medium text-gray-900">
-                                            Sleep afbeeldingen hierheen of 
-                                            <span class="text-blue-600 underline">klik om te selecteren</span>
-                                        </span>
-                                        <input type="file" name="images[]" id="images" class="sr-only" multiple accept="image/*">
-                                    </label>
-                                    <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF tot 2MB per afbeelding</p>
-                                </div>
+                        <label class="block font-medium mb-2" for="images_input">Afbeeldingen</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center" id="upload-area">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="mt-4">
+                                <label for="images_input" class="cursor-pointer">
+                                    <span class="mt-2 block text-sm font-medium text-gray-900">
+                                        Sleep hierheen of <span class="text-blue-600 underline">klik om te selecteren</span>
+                                    </span>
+                                    <input type="file" id="images_input" class="sr-only" multiple accept="image/*">
+                                </label>
+                                <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF, WEBP tot 2MB per afbeelding</p>
                             </div>
                         </div>
-                        
-                        <!-- Preview area for selected images -->
-                        <div id="image-previews" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 hidden"></div>
-                        
-                        @error('images.*') <div class="text-red-500 text-sm mt-2">{{ $message }}</div> @enderror
-                    </div>
 
-                    <div class="mb-4">
-                        <label class="block font-medium" for="requirements">Vereisten</label>
-                        <textarea class="w-full border rounded p-2" name="requirements" id="requirements">{{ old('requirements') }}</textarea>
-                        @error('requirements') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
+                        <div id="image-previews" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4 {{ $initialTemp->isEmpty() ? 'hidden' : '' }}"></div>
+
+                        <div id="temp-images-container">
+                            @foreach($initialTemp as $t)
+                                <input type="hidden" name="temp_images[]" value="{{ $t['path'] }}">
+                            @endforeach
+                        </div>
+
+                        @error('temp_images.*') <div class="text-red-500 text-sm mt-2">{{ $message }}</div> @enderror
                     </div>
 
                     <div>
                         <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                            Activiteit Aanmaken
+                            Activiteit aanmaken
                         </button>
                     </div>
                 </form>
@@ -111,102 +147,140 @@
         </div>
     </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const uploadArea = document.getElementById('upload-area');
-        const fileInput = document.getElementById('images');
-        const previewArea = document.getElementById('image-previews');
-        let selectedFiles = [];
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ======== DATUMVALIDATIE (geen verleden) ========
+            const now = new Date();
+            const localISOTime = now.toISOString().slice(0, 16);
+            document.getElementById('start_time').min = localISOTime;
+            document.getElementById('end_time').min = localISOTime;
 
-        // Remove the click handler from uploadArea entirely
-        // The label's native behavior will handle clicks
+            // ======== DEELNEMERSVALIDATIE ========
+            const minInput = document.getElementById('min_participants');
+            const maxInput = document.getElementById('max_participants');
+            const errorMsg = document.getElementById('participantsError');
+            const form = document.getElementById('activityCreateForm');
 
-        // Drag and drop functionality
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.add('bg-blue-50', 'border-blue-300');
-        });
-
-        uploadArea.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.remove('bg-blue-50', 'border-blue-300');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            uploadArea.classList.remove('bg-blue-50', 'border-blue-300');
-            
-            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
-            
-            if (files.length > 0) {
-                handleFiles(files);
+            function validateParticipants() {
+                const min = parseInt(minInput.value) || 0;
+                const max = parseInt(maxInput.value) || 0;
+                if (min > max && max > 0) {
+                    errorMsg.classList.remove('hidden');
+                    return false;
+                } else {
+                    errorMsg.classList.add('hidden');
+                    return true;
+                }
             }
-        });
 
-        // Handle file selection
-        fileInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length > 0) {
-                handleFiles(files);
-            }
-        });
+            minInput.addEventListener('input', validateParticipants);
+            maxInput.addEventListener('input', validateParticipants);
 
-        function handleFiles(files) {
-            // Filter out duplicates
-            const newFiles = files.filter(file => {
-                return !selectedFiles.some(existingFile => 
-                    existingFile.name === file.name && existingFile.size === file.size
-                );
+            form.addEventListener('submit', (e) => {
+                if (!validateParticipants()) {
+                    e.preventDefault();
+                }
             });
-            
-            selectedFiles = [...selectedFiles, ...newFiles];
-            updateFileInput();
-            showPreviews();
-        }
 
-        function updateFileInput() {
-            const dt = new DataTransfer();
-            selectedFiles.forEach(file => dt.items.add(file));
-            fileInput.files = dt.files;
-        }
+            // ======== BESTAANDE UPLOADSCRIPTEN ========
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput  = document.getElementById('images_input');
+            const preview    = document.getElementById('image-previews');
+            const hiddenWrap = document.getElementById('temp-images-container');
 
-        function showPreviews() {
-            previewArea.innerHTML = '';
-            
-            if (selectedFiles.length === 0) {
-                previewArea.classList.add('hidden');
-                return;
+            const STORAGE_BASE = @json(asset('storage'));
+            let tempFiles = @json($initialTemp->values());
+
+            function urlFor(item) {
+                return item.url || (STORAGE_BASE + '/' + item.path);
             }
-            
-            previewArea.classList.remove('hidden');
 
-            selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
+            function renderPreviews() {
+                preview.innerHTML = '';
+                if (!tempFiles.length) { preview.classList.add('hidden'); return; }
+                preview.classList.remove('hidden');
+                tempFiles.forEach(item => {
+                    const imgSrc = item.previewUrl || urlFor(item);
                     const div = document.createElement('div');
                     div.className = 'relative group';
                     div.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview" class="w-full h-24 object-cover rounded border">
-                        <button type="button" onclick="removeImage(${index})" 
-                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                            ×
-                        </button>
-                        <div class="text-xs text-gray-600 mt-1 truncate">${file.name}</div>
+                        <img src="${imgSrc}" alt="Preview" class="w-full h-24 object-cover rounded border" onerror="this.closest('.group').querySelector('.fallback')?.classList.remove('hidden')">
+                        <button type="button"
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                        <div class="fallback hidden text-xs text-gray-600 mt-1 truncate">${(item.path || '').split('/').pop()}</div>
                     `;
-                    previewArea.appendChild(div);
-                };
-                reader.readAsDataURL(file);
-            });
-        }
+                    div.querySelector('button').addEventListener('click', () => removeTemp(item.path));
+                    preview.appendChild(div);
+                });
+            }
 
-        window.removeImage = function(index) {
-            selectedFiles.splice(index, 1);
-            updateFileInput();
-            showPreviews();
-        };
-    });
-</script>
+            function addHidden(path) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'temp_images[]';
+                input.value = path;
+                hiddenWrap.appendChild(input);
+            }
+
+            function removeTemp(path) {
+                tempFiles = tempFiles.filter(t => t.path !== path);
+                [...hiddenWrap.querySelectorAll('input[name="temp_images[]"]')]
+                    .find(i => i.value === path)?.remove();
+                renderPreviews();
+            }
+
+            async function uploadOne(file) {
+                const fd = new FormData();
+                fd.append('image', file);
+                fd.append('_token', '{{ csrf_token() }}');
+                try {
+                    const r = await fetch('{{ route('uploads.temp') }}', {
+                        method:'POST', headers:{'Accept':'application/json'}, body:fd
+                    });
+                    if (!r.ok) return null;
+                    const data = await r.json();
+                    return {
+                        path: data.path,
+                        url:  data.url || (STORAGE_BASE + '/' + data.path)
+                    };
+                } catch { return null; }
+            }
+
+            async function uploadFiles(files) {
+                for (const file of files) {
+                    const localUrl = URL.createObjectURL(file);
+                    const res = await uploadOne(file);
+                    if (!res) continue;
+                    const item = { path: res.path, url: res.url, previewUrl: localUrl };
+                    if (!tempFiles.some(t => t.path === item.path)) {
+                        tempFiles.push(item);
+                        addHidden(item.path);
+                    }
+                }
+                renderPreviews();
+            }
+
+            uploadArea.addEventListener('dragover', e => {
+                e.preventDefault();
+                uploadArea.classList.add('bg-blue-50','border-blue-300');
+            });
+            uploadArea.addEventListener('dragleave', e => {
+                e.preventDefault();
+                uploadArea.classList.remove('bg-blue-50','border-blue-300');
+            });
+            uploadArea.addEventListener('drop', e => {
+                e.preventDefault();
+                uploadArea.classList.remove('bg-blue-50','border-blue-300');
+                const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+                if (files.length) uploadFiles(files);
+            });
+            fileInput.addEventListener('change', e => {
+                const files = [...e.target.files];
+                if (files.length) uploadFiles(files);
+                fileInput.value = '';
+            });
+
+            renderPreviews();
+        });
+    </script>
 </x-app-layout>

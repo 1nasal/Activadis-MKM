@@ -13,6 +13,16 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         //
     })
+    // 👇 ADD THIS BLOCK
+    ->withProviders([
+        App\Providers\AppServiceProvider::class,
+        App\Providers\AuthServiceProvider::class,   // 👈 this one makes your Gates work!
+        // (Optional, if you have them)
+        // App\Providers\EventServiceProvider::class,
+        // App\Providers\RouteServiceProvider::class,
+    ])
+    // 👆 END OF ADDED BLOCK
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->create();

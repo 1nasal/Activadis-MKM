@@ -137,6 +137,7 @@ class ActivityController extends Controller
      */
     public function store(Request $request)
     {
+        // CHANGED: accept temp_images[] (strings) in addition to classic images[]
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
@@ -150,10 +151,18 @@ class ActivityController extends Controller
             'image' => 'nullable|string',
             'requirements' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'temp_images' => 'nullable|array',
+            'temp_images.*' => 'string'
         ]);
 
         $activity = Activity::create($validated);
 
+        // Move any temp images to final location
+        if ($request->filled('temp_images')) {
+            $this->persistTempImages($request->input('temp_images', []), $activity);
+        }
+
+        // Still support direct uploads if you also submit images[]
         if ($request->hasFile('images')) {
             $this->handleImageUploads($request->file('images'), $activity);
         }
@@ -185,6 +194,7 @@ class ActivityController extends Controller
      */
     public function update(Request $request, Activity $activity)
     {
+        // CHANGED: accept temp_images[] here as well
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'location' => 'required|string|max:255',
@@ -200,6 +210,8 @@ class ActivityController extends Controller
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'remove_images' => 'nullable|array',
             'remove_images.*' => 'integer|exists:activity_images,id',
+            'temp_images' => 'nullable|array',
+            'temp_images.*' => 'string'
         ]);
 
         $activity->update($validated);
@@ -208,6 +220,12 @@ class ActivityController extends Controller
             $this->removeImages($request->remove_images);
         }
 
+        // Move temp images added during edit
+        if ($request->filled('temp_images')) {
+            $this->persistTempImages($request->input('temp_images', []), $activity);
+        }
+
+        // Plus any newly uploaded files directly
         if ($request->hasFile('images')) {
             $this->handleImageUploads($request->file('images'), $activity);
         }
@@ -230,11 +248,12 @@ class ActivityController extends Controller
     }
 
     /**
-     * Handle multiple image uploads
+     * Handle multiple image uploads (classic non-temp)
      */
     private function handleImageUploads(array $images, Activity $activity): void
     {
-        $sortOrder = $activity->images()->max('sort_order') + 1;
+        $sortOrder = (int) $activity->images()->max('sort_order');
+        $sortOrder = $sortOrder ? $sortOrder + 1 : 1;
 
         foreach ($images as $image) {
             $filename = Str::uuid() . '.' . $image->getClientOriginalExtension();
@@ -249,6 +268,59 @@ class ActivityController extends Controller
                 'mime_type' => $image->getMimeType(),
                 'sort_order' => $sortOrder++,
             ]);
+        }
+    }
+
+    /**
+     * CHANGED: Persist temp images saved on the public disk (tmp/uuid/filename)
+     *          to the final folder and create ActivityImage records.
+     */
+    private function persistTempImages(array $tempPaths, Activity $activity): void
+    {
+        $disk = Storage::disk('public');
+
+        $sortOrder = (int) $activity->images()->max('sort_order');
+        $sortOrder = $sortOrder ? $sortOrder + 1 : 1;
+
+        foreach ($tempPaths as $tempPath) {
+            // Expecting paths like "tmp/{uuid}/file.jpg"
+            if (!$tempPath || !$disk->exists($tempPath)) {
+                continue; // skip missing/invalid
+            }
+
+            $orig = basename($tempPath);
+            $finalFilename = Str::uuid() . '_' . $orig;
+            $finalPath = 'activity-images/' . $finalFilename;
+
+            // Move within the same disk
+            $disk->move($tempPath, $finalPath);
+
+            // Try to get size/mime (best-effort)
+            $size = null;
+            $mime = null;
+            try { $size = $disk->size($finalPath); } catch (\Throwable $e) {}
+            try { $mime = $disk->mimeType($finalPath); } catch (\Throwable $e) {}
+
+            ActivityImage::create([
+                'activity_id'   => $activity->id,
+                'filename'      => $finalFilename,
+                'original_name' => $orig,
+                'path'          => $finalPath,
+                'file_size'     => $size,
+                'mime_type'     => $mime,
+                'sort_order'    => $sortOrder++,
+            ]);
+
+            // OPTIONAL: clean now-empty tmp folder (tmp/{uuid})
+            $dir = dirname($tempPath);
+            try {
+                $filesLeft = collect($disk->files($dir));
+                if ($filesLeft->isEmpty()) {
+                    $disk->deleteDirectory($dir);
+                }
+            } catch (\Throwable $e) {
+                // ignore cleanup errors
+            }
         }
     }
 
@@ -430,5 +502,61 @@ class ActivityController extends Controller
         \DB::table('activity_external')->where('id', $pivot->id)->delete();
 
         return redirect('/')->with('success', 'Je bent uitgeschreven voor de activiteit: ' . $activity->name);
+    }
+  
+    public function duplicate(Activity $activity)
+    {
+        $activity->load('images');
+
+        $prefill = [
+            'name'             => $activity->name,
+            'location'         => $activity->location,
+            'includes_food'    => (bool) $activity->includes_food,
+            'description'      => $activity->description,
+            'start_time'       => $activity->start_time,
+            'end_time'         => $activity->end_time,
+            'cost'             => $activity->cost,
+            'max_participants' => $activity->max_participants,
+            'min_participants' => $activity->min_participants,
+            'image'            => $activity->image,
+            'requirements'     => $activity->requirements,
+        ];
+
+        $tempImages  = $this->stageImagesAsTemp($activity);
+        $duplicateOf = $activity->id;
+
+        // prevent stale "old()" from overriding our prefill
+        session()->forget('_old_input');
+        session()->forget('errors');
+
+        return view('activity.create', compact('prefill', 'tempImages', 'duplicateOf'));
+    }
+
+
+    /**
+     * Copy Activity images to public/tmp/{uuid}/ and return their tmp paths.
+     */
+    private function stageImagesAsTemp(Activity $activity): array
+    {
+        $disk = Storage::disk('public');
+        $uuid = (string) Str::uuid();
+        $baseTmp = "tmp/{$uuid}";
+
+        $disk->makeDirectory($baseTmp);
+        $paths = [];
+
+        foreach ($activity->images as $img) {
+            if (!$img->path || !$disk->exists($img->path)) {
+                continue;
+            }
+            $tmpFilename = $img->filename ?: (Str::uuid() . '.jpg');
+            $tmpPath = "{$baseTmp}/{$tmpFilename}";
+
+            // copy original to tmp
+            $disk->copy($img->path, $tmpPath);
+            $paths[] = $tmpPath;
+        }
+
+        return $paths;
     }
 }

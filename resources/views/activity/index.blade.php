@@ -32,7 +32,6 @@
                                     </svg>
                                 </a>
                             @endif
-                            <!-- Hidden inputs to preserve sort parameters -->
                             @if(request('sort'))
                                 <input type="hidden" name="sort" value="{{ request('sort') }}">
                             @endif
@@ -45,7 +44,6 @@
                     <!-- Sorting Controls -->
                     <div class="mb-6 flex items-center justify-between">
                         <div class="flex items-center gap-4">
-                            <!-- Sort Dropdown -->
                             <div class="relative">
                                 <button id="sortDropdownButton" type="button"
                                         class="inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 rounded-md">
@@ -106,7 +104,6 @@
                                 </div>
                             </div>
 
-                            <!-- Results count -->
                             <span class="text-sm text-gray-600">
                                 {{ $activities->total() }} activiteit{{ $activities->total() !== 1 ? 'en' : '' }}
                                 @if(request('search'))
@@ -115,7 +112,6 @@
                             </span>
                         </div>
 
-                        <!-- Reset button -->
                         @if(request()->has('sort') || request()->has('order') || request()->has('search'))
                             <a href="{{ url()->current() }}" class="text-sm text-blue-600 hover:text-blue-800 underline">
                                 Reset filters
@@ -131,12 +127,12 @@
                                         $now = now();
                                         $isPast = $activity->end_time < $now;
                                         $isOngoing = $activity->start_time <= $now && $activity->end_time >= $now;
-                                        $isUpcoming = $activity->start_time > $now;
                                         $totalParticipants = $activity->users->count() + $activity->externals->count();
                                     @endphp
-                                    <li>
+                                    <li class="relative">
+                                        <!-- Card link (unchanged) -->
                                         <a href="{{ route('activities.show', $activity) }}"
-                                           class="block px-6 py-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition duration-200 ease-in-out shadow-sm hover:shadow-md {{ $isPast ? 'opacity-75' : '' }}">
+                                           class="z-0 block px-6 py-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition duration-200 ease-in-out shadow-sm hover:shadow-md {{ $isPast ? 'opacity-75' : '' }}">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex-1">
                                                     <div class="flex items-center gap-3">
@@ -158,13 +154,6 @@
                                                                 </svg>
                                                                 Bezig
                                                             </span>
-                                                        @else
-                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                                </svg>
-                                                                Aankomend
-                                                            </span>
                                                         @endif
                                                     </div>
 
@@ -178,7 +167,7 @@
 
                                                         <span class="flex items-center">
                                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                             </svg>
                                                             {{ $totalParticipants }} deelnemer{{ $totalParticipants != 1 ? 's' : '' }}
                                                         </span>
@@ -193,11 +182,25 @@
                                                     </div>
                                                 </div>
 
+                                                <!-- Keep the ">" arrow exactly where it was -->
                                                 <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                                 </svg>
                                             </div>
                                         </a>
+
+                                        <!-- Dupliceren icon button (ALWAYS visible), placed to the LEFT of the ">" arrow -->
+                                        @can('manage-activities')
+                                            <a href="{{ route('activities.duplicate', $activity) }}"
+                                               class="absolute top-1/2 -translate-y-1/2 right-16 z-20 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-700 hover:text-blue-700 hover:border-blue-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                               title="Dupliceren" aria-label="Dupliceren">
+                                                <!-- Clean, crisp duplicate icon -->
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                          d="M7 7h8a2 2 0 012 2v8M7 7V5a2 2 0 012-2h8M7 7H5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-2"/>
+                                                </svg>
+                                            </a>
+                                        @endcan
                                     </li>
                                 @endforeach
                             </ul>
@@ -240,10 +243,8 @@
 
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
-                    const sortMenu = document.getElementById('sortDropdownMenu');
-                    if (sortMenu && !sortMenu.classList.contains('hidden')) {
-                        sortMenu.classList.add('hidden');
-                    }
+                    const m = document.getElementById('sortDropdownMenu');
+                    if (m && !m.classList.contains('hidden')) m.classList.add('hidden');
                 }
             });
         });
