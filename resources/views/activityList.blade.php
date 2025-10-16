@@ -535,7 +535,7 @@
 
             const joinButton = document.getElementById('modalJoinButton');
             const joinButtonText = document.getElementById('modalJoinButtonText');
-            const isFull = activity.max_participants && activity.total_participants >= activity.max_participants;
+            const isFull = {{ $activity->max_participants && ($activity->users->count() + $activity->externals()->wherePivot('confirmed', true)->count()) >= $activity->max_participants ? 'true' : 'false' }};
 
             if (activity.is_enrolled) {
                 // Maak join button een uitschrijfbutton
