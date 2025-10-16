@@ -16,7 +16,6 @@
         catch (\Throwable $e) { return ''; }
     };
 
-    // Gebruik zelfde URL-patroon als je eerdere werkende view: asset('storage/'.$path)
     $initialTempPaths = $hasOld ? (array) old('temp_images', []) : (array) $tempImages;
     $initialTemp = collect($initialTempPaths)->map(fn($p) => [
         'path' => $p,
@@ -76,6 +75,7 @@
                         @error('description') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- Start- en eindtijd (geen verleden toegestaan) --}}
                     <div class="mb-4">
                         <label class="block font-medium" for="start_time">Starttijd</label>
                         <input class="w-full border rounded p-2" type="datetime-local" name="start_time" id="start_time" value="{{ $fmtDT($val('start_time')) }}" required>
@@ -94,19 +94,21 @@
                         @error('cost') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- Max en min deelnemers met JS-validatie --}}
                     <div class="mb-4">
                         <label class="block font-medium" for="max_participants">Maximaal aantal deelnemers</label>
-                        <input class="w-full border rounded p-2" type="number" name="max_participants" id="max_participants" value="{{ $val('max_participants') }}">
+                        <input class="w-full border rounded p-2" type="number" name="max_participants" id="max_participants" value="{{ $val('max_participants') }}" min="1" required>
                         @error('max_participants') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="mb-4">
                         <label class="block font-medium" for="min_participants">Minimaal aantal deelnemers</label>
-                        <input class="w-full border rounded p-2" type="number" name="min_participants" id="min_participants" value="{{ $val('min_participants') }}">
+                        <input class="w-full border rounded p-2" type="number" name="min_participants" id="min_participants" value="{{ $val('min_participants') }}" min="1" required>
+                        <div id="participantsError" class="text-red-500 text-sm hidden">Minimaal aantal mag niet hoger zijn dan maximaal aantal.</div>
                         @error('min_participants') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- Afbeeldingen: temp uploader + restore --}}
+                    {{-- Afbeeldingen upload --}}
                     <div class="mb-4">
                         <label class="block font-medium mb-2" for="images_input">Afbeeldingen</label>
                         <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center" id="upload-area">
@@ -147,17 +149,49 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // ======== DATUMVALIDATIE (geen verleden) ========
+            const now = new Date();
+            const localISOTime = now.toISOString().slice(0, 16);
+            document.getElementById('start_time').min = localISOTime;
+            document.getElementById('end_time').min = localISOTime;
+
+            // ======== DEELNEMERSVALIDATIE ========
+            const minInput = document.getElementById('min_participants');
+            const maxInput = document.getElementById('max_participants');
+            const errorMsg = document.getElementById('participantsError');
+            const form = document.getElementById('activityCreateForm');
+
+            function validateParticipants() {
+                const min = parseInt(minInput.value) || 0;
+                const max = parseInt(maxInput.value) || 0;
+                if (min > max && max > 0) {
+                    errorMsg.classList.remove('hidden');
+                    return false;
+                } else {
+                    errorMsg.classList.add('hidden');
+                    return true;
+                }
+            }
+
+            minInput.addEventListener('input', validateParticipants);
+            maxInput.addEventListener('input', validateParticipants);
+
+            form.addEventListener('submit', (e) => {
+                if (!validateParticipants()) {
+                    e.preventDefault();
+                }
+            });
+
+            // ======== BESTAANDE UPLOADSCRIPTEN ========
             const uploadArea = document.getElementById('upload-area');
             const fileInput  = document.getElementById('images_input');
             const preview    = document.getElementById('image-previews');
             const hiddenWrap = document.getElementById('temp-images-container');
 
             const STORAGE_BASE = @json(asset('storage'));
-
             let tempFiles = @json($initialTemp->values());
 
             function urlFor(item) {
-                // Gebruik server-URL als die bestaat, anders /storage/{path}
                 return item.url || (STORAGE_BASE + '/' + item.path);
             }
 
@@ -165,7 +199,6 @@
                 preview.innerHTML = '';
                 if (!tempFiles.length) { preview.classList.add('hidden'); return; }
                 preview.classList.remove('hidden');
-
                 tempFiles.forEach(item => {
                     const imgSrc = item.previewUrl || urlFor(item);
                     const div = document.createElement('div');
