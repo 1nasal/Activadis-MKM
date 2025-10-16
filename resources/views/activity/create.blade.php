@@ -75,6 +75,13 @@
                         @error('description') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
                     </div>
 
+                    <div class="mb-4">
+                    <label class="block font-medium" for="requirements">Vereisten</label>
+                    <textarea class="w-full border rounded p-2" name="requirements" id="requirements">{{ $val('requirements') }}</textarea>
+                    @error('requirements') <div class="text-red-500 text-sm">{{ $message }}</div> @enderror
+                     </div>
+
+
                     {{-- Start- en eindtijd (geen verleden toegestaan) --}}
                     <div class="mb-4">
                         <label class="block font-medium" for="start_time">Starttijd</label>
