@@ -53,13 +53,13 @@ Route::prefix('activities')->name('activities.')->group(function () {
     Route::get('/', [ActivityController::class, 'index'])->name('index');
     Route::get('/activity/confirm/{token}', [ActivityController::class, 'confirm'])->name('confirm');
     Route::get('/activity/leave/{token}', [ActivityController::class, 'leaveExternal'])->name('leave.external');
+    Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('join');
 
     // Authenticated users
     Route::middleware('auth')->group(function () {
         Route::get('/create', [ActivityController::class, 'create'])->name('create');
         Route::post('/', [ActivityController::class, 'store'])->name('store');
 
-        Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('join')->whereNumber('activity');
         Route::delete('/{activity}/leave', [ActivityController::class, 'leave'])->name('leave')->whereNumber('activity');
 
         // Auth-only edit/update/destroy
