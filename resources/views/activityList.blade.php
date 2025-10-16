@@ -233,8 +233,8 @@
                             <div class="md:w-32 flex-shrink-0 flex md:flex-col gap-2">
                                 @if($isEnrolled)
                                     <button
-                                        class="px-4 py-2 text-sm font-medium border border-green-600 text-green-600 cursor-not-allowed"
-                                        disabled>
+                                        onclick="event.stopPropagation(); openActivityModal({{ $activity->id }})"
+                                        class="px-4 py-2 text-sm font-medium border border-green-600 text-green-600 hover:bg-green-50 transition-colors">
                                         Ingeschreven
                                     </button>
                                 @else
