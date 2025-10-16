@@ -388,18 +388,19 @@ class ActivityController extends Controller
 
             return back()->with('success', 'Nieuwe bevestigingsmail is verstuurd! Check je inbox om je inschrijving te bevestigen.');
         }
+        else {
+            $user = Auth::user();
 
-        $user = Auth::user();
+            if ($activity->users()->where('user_id', $user->id)->exists()) {
+                return back()->with('error', 'Je bent al ingeschreven voor deze activiteit.');
+            }
 
-        if ($activity->users()->where('user_id', $user->id)->exists()) {
-            return back()->with('error', 'Je bent al ingeschreven voor deze activiteit.');
+            $activity->users()->attach($user->id);
+
+            Mail::to($user->email)->send(new ActivityJoinedMail($activity, $user->first_name));
+
+            return back()->with('success', 'Je bent nu ingeschreven voor de activiteit!');
         }
-
-        $activity->users()->attach($user->id);
-
-        Mail::to($user->email)->send(new ActivityJoinedMail($activity, $user->first_name));
-
-        return back()->with('success', 'Je bent nu ingeschreven voor de activiteit!');
     }
 
     public function myActivities(Request $request)
@@ -503,7 +504,7 @@ class ActivityController extends Controller
 
         return redirect('/')->with('success', 'Je bent uitgeschreven voor de activiteit: ' . $activity->name);
     }
-  
+
     public function duplicate(Activity $activity)
     {
         $activity->load('images');
