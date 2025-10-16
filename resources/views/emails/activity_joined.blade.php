@@ -19,7 +19,7 @@
                 </tr>
 
                 <tr>
-                    <td style="padding:30px; color:#333;">
+                    <td style="padding:30px; color:#333; border-bottom:4px solid #FAA21B;">
                         <h2 style="margin-top:0; font-size:22px; color:#FAA21B;">Hallo {{ $name }},</h2>
                         <p style="font-size:16px; line-height:1.5;">
                             Bedankt voor je aanmelding bij de activiteit <strong>{{ $activity->name }}</strong>.
@@ -34,9 +34,19 @@
                             <strong>Locatie:</strong> {{ $activity->location }}
                         </p>
 
-                        <p style="font-size:16px; line-height:1.5;">
+                        <p style="font-size:16px; line-height:1.5; margin-bottom:20px;">
                             We kijken ernaar uit je daar te zien!
                         </p>
+
+                        @isset($leaveToken)
+                            <p style="font-size:16px; line-height:1.5; margin-top:20px; text-align:center;">
+                                Kun je toch niet komen? Geen probleem.<br>
+                                <a href="{{ route('activities.leave.external', ['token' => $leaveToken]) }}"
+                                   style="display:inline-block; margin-top:15px; background-color:#d9534f; color:white; padding:12px 18px; text-decoration:none; border-radius:5px; font-weight:bold;">
+                                    Uitschrijven voor deze activiteit
+                                </a>
+                            </p>
+                        @endisset
                     </td>
                 </tr>
             </table>

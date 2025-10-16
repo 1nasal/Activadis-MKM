@@ -125,7 +125,12 @@
             <div class="space-y-4">
                 @foreach($activities as $activity)
                     @php
-                        $totalParticipants = $activity->users->count() + $activity->externals->count();
+                        $confirmedExternalsCount = $activity->externals()
+                            ->wherePivot('confirmed', true)
+                            ->count();
+
+                        $totalParticipants = $activity->users->count() + $confirmedExternalsCount;
+
                         $isFull = $activity->max_participants && $totalParticipants >= $activity->max_participants;
                         $isEnrolled = auth()->check() && $activity->users->contains(auth()->id());
                     @endphp
@@ -548,7 +553,7 @@
 
             const joinButton = document.getElementById('modalJoinButton');
             const joinButtonText = document.getElementById('modalJoinButtonText');
-            const isFull = activity.max_participants && activity.total_participants >= activity.max_participants;
+            const isFull = {{ $activity->max_participants && ($activity->users->count() + $activity->externals()->wherePivot('confirmed', true)->count()) >= $activity->max_participants ? 'true' : 'false' }};
 
             if (activity.is_enrolled) {
                 joinButtonText.textContent = 'Uitschrijven';

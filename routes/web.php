@@ -23,6 +23,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // User management
 });
 
 // Gebruikers beheren (alleen admin)
@@ -47,31 +49,35 @@ Route::post('/externals', [\App\Http\Controllers\ExternalController::class, 'sto
 
 // ACTIVITEITEN
 Route::prefix('activities')->name('activities.')->group(function () {
+    // Open routes
+    Route::get('/', [ActivityController::class, 'index'])->name('index');
+    Route::get('/activity/confirm/{token}', [ActivityController::class, 'confirm'])->name('confirm');
+    Route::get('/activity/leave/{token}', [ActivityController::class, 'leaveExternal'])->name('leave.external');
 
-    // Create/store FIRST (static path)
+    // Authenticated users
     Route::middleware('auth')->group(function () {
         Route::get('/create', [ActivityController::class, 'create'])->name('create');
         Route::post('/', [ActivityController::class, 'store'])->name('store');
+
         Route::post('/{activity}/join', [ActivityController::class, 'join'])->name('join')->whereNumber('activity');
         Route::delete('/{activity}/leave', [ActivityController::class, 'leave'])->name('leave')->whereNumber('activity');
-    });
 
-    // Admin-only listing + show + beheer
-    Route::middleware(['auth', 'can:manage-activities'])->group(function () {
-        Route::get('/', [ActivityController::class, 'index'])->name('index');
-        
-        // IMPORTANT: Duplicate must come BEFORE the generic /{activity} show route
-        Route::get('/{activity}/duplicate', [ActivityController::class, 'duplicate'])
-            ->name('duplicate')
-            ->whereNumber('activity');
-        
+        // Auth-only edit/update/destroy
         Route::get('/{activity}/edit', [ActivityController::class, 'edit'])->name('edit')->whereNumber('activity');
         Route::put('/{activity}', [ActivityController::class, 'update'])->name('update')->whereNumber('activity');
         Route::delete('/{activity}', [ActivityController::class, 'destroy'])->name('destroy')->whereNumber('activity');
-        
-        // Generic show route LAST so it doesn't catch /duplicate or /edit
-        Route::get('/{activity}', [ActivityController::class, 'show'])->name('show')->whereNumber('activity');
     });
+
+    // Admin-only routes
+    Route::middleware(['auth', 'can:manage-activities'])->group(function () {
+        Route::get('/{activity}/duplicate', [ActivityController::class, 'duplicate'])
+            ->name('duplicate')
+            ->whereNumber('activity');
+    });
+
+    // Generic show route LAST
+    Route::get('/{activity}', [ActivityController::class, 'show'])->name('show')->whereNumber('activity');
+  });
 });
 
 require __DIR__.'/auth.php';
