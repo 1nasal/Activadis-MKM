@@ -285,7 +285,13 @@
                     delBtn.className = 'p-2 rounded hover:bg-red-50';
                     delBtn.title = 'Verwijderen';
                     delBtn.innerHTML = '<svg class="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="currentColor"><path d="M6 7h12l-1 14H7L6 7zm3-3h6l1 3H8l1-3z"/></svg>';
-                    delBtn.addEventListener('click', (e) => { e.stopPropagation(); confirmDelete(t.id, t.name); });
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm(`Weet je zeker dat je "${t.name}" wilt verwijderen?`)) {
+                            deleteTitle(t.id);
+                        }
+                    });
+
 
                     right.appendChild(editBtn);
                     right.appendChild(delBtn);
@@ -385,26 +391,26 @@
         }
 
         async function deleteTitle(id) {
-            const url = '{{ url('/job-titles') }}/' + id;
-            const res = await fetch(url, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrf
+                const url = '{{ url('/job-titles') }}/' + id;
+                const res = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrf
+                    }
+                });
+                if (res.ok) {
+                    const removed = titles.find(t => t.id === id);
+                    titles = titles.filter(t => t.id !== id);
+                    if (removed && hidden.value === removed.name) {
+                        hidden.value = '';
+                        selectedTx.textContent = 'Kies een functietitel…';
+                    }
+                    renderFiltered();
+                } else {
+                    alert('Kon functietitel niet verwijderen.');
                 }
-            });
-            if (res.ok) {
-                const removed = titles.find(t => t.id === id);
-                titles = titles.filter(t => t.id !== id);
-                if (removed && hidden.value === removed.name) {
-                    hidden.value = '';
-                    selectedTx.textContent = 'Kies een functietitel…';
-                }
-                renderFiltered();
-            } else {
-                alert('Kon functietitel niet verwijderen.');
             }
-        }
 
         // Events
         toggleBtn.addEventListener('click', toggleMenu);

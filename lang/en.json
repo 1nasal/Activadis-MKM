@@ -19,6 +19,8 @@
   "Log Out": "Uitloggen",
   "Register": "Registreren",
   "Name": "Naam",
+  "First name": "Voornaam",
+  "Last name": "Achternaam",
   "Email": "E-mailadres",
   "Password": "Wachtwoord",
   "Confirm": "Bevestigen",
@@ -63,6 +65,8 @@
 
   "Profile updated successfully.": "Profiel succesvol bijgewerkt.",
   "Update your account's profile information and email address.": "Werk de profielinformatie en het e-mailadres van je account bij.",
+  "Ensure your account is using a long, random password to stay secure.": "Zorg ervoor dat je account een lang en willekeurig wachtwoord gebruikt om veilig te blijven.",
+  "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.": "Zodra je account is verwijderd, worden alle gegevens en bronnen permanent verwijderd. Download eerst alle gegevens die je wilt behouden voordat je je account verwijdert.",
 
   "Terms of Service": "Servicevoorwaarden",
   "Privacy Policy": "Privacybeleid",
@@ -72,7 +76,6 @@
   "Continue": "Doorgaan",
 
   "Verify Email Address": "Verifieer e-mailadres",
-  "Email": "E-mailadres",
   "Password Reset": "Wachtwoord herstellen",
   "Send": "Versturen",
   "Back to login": "Terug naar inloggen"
