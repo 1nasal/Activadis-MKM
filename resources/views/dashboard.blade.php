@@ -113,12 +113,17 @@
                             </div>
 
                             <!-- Results count -->
+                            @php
+                                $incomingCount = $activities->filter(fn($activity) => $activity->end_time >= now())->count();
+                            @endphp
+
                             <span class="text-sm text-gray-600">
-                                {{ $activities->count() }} activiteit{{ $activities->count() !== 1 ? 'en' : '' }}
+                                {{ $incomingCount }} activiteit{{ $incomingCount !== 1 ? 'en' : '' }}
                                 @if(request('search'))
                                     <span class="text-gray-500">voor "{{ request('search') }}"</span>
                                 @endif
                             </span>
+
                         </div>
 
                         <!-- Reset button -->
