@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use App\Mail\UserActivationMail;
 use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
@@ -61,17 +63,19 @@ class UserController extends Controller
             $user->job_title  = $validated['job_title'];
             $user->role       = $request->has('is_admin') && $request->is_admin ? 'admin' : 'user';
             $user->activated  = false;
+            $user->activation_token = Str::random(60);
+            $user->activation_token_expires_at = now()->addHours(48);
 
             $user->save();
 
-            // reset link sturen naar aangemaakte gebruiker
-            Password::sendResetLink(['email' => $user->email]);
+            // Stuur activatie e-mail
+            Mail::to($user->email)->send(new UserActivationMail($user));
 
-            return redirect()->route('users.index')->with('success', 'Gebruiker succesvol aangemaakt en e-mail verzonden!');
+            return redirect()->route('users.index')->with('success', 'Gebruiker succesvol aangemaakt en activatie-e-mail verzonden!');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Er is iets misgegaan bij het aanmaken van de gebruiker. Probeer het opnieuw.' . $e);
+                ->with('error', 'Er is iets misgegaan bij het aanmaken van de gebruiker. Probeer het opnieuw.');
         }
     }
 

@@ -13,6 +13,13 @@ Route::post('/uploads/temp', [TempUploadController::class, 'store'])
     ->middleware('auth')
     ->name('uploads.temp');
 
+ // Account activatie routes
+Route::get('/activeer-account/{token}', [App\Http\Controllers\ActivationController::class, 'show'])
+    ->name('activation.show');
+    
+Route::post('/activeer-account/{token}', [App\Http\Controllers\ActivationController::class, 'activate'])
+    ->name('activation.activate');   
+
 // Dashboard (ingelogd + verified)
 Route::get('/dashboard', [ActivityController::class, 'myActivities'])
     ->middleware(['auth', 'verified'])

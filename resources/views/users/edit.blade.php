@@ -73,7 +73,6 @@
                                         aria-haspopup="listbox"
                                         aria-expanded="false">
                                     <span class="flex items-center gap-2">
-                                        <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                                         <span id="jobTitleSelectedText" class="text-gray-700">
                                             {{ old('job_title', $user->job_title) ?: 'Kies een functietitel…' }}
                                         </span>

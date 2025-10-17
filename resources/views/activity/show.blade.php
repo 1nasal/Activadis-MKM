@@ -142,13 +142,6 @@
                                     @endif
                                 </span>
                             </div>
-                            
-                            @if($activity->images->count() > 1)
-                                <div>
-                                    <strong class="text-gray-700">Afbeeldingen:</strong>
-                                    <span class="ml-2">{{ $activity->images->count() }} afbeeldingen beschikbaar</span>
-                                </div>
-                            @endif
                         </div>
                     </div>
                     

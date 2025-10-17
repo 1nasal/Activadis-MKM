@@ -1,5 +1,5 @@
-import defaultTheme from 'tailwindcss/defaultTheme';
-import forms from '@tailwindcss/forms';
+import defaultTheme from 'tailwindcss/defaultTheme'
+import forms from '@tailwindcss/forms'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -11,6 +11,11 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                brand: '#FAA21B',
+                brandHover: '#e89419',
+                brandBorder: '#e8a14a',
+            },
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
@@ -18,4 +23,4 @@ export default {
     },
 
     plugins: [forms],
-};
+}
