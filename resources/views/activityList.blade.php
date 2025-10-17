@@ -246,12 +246,12 @@
 
   <!-- VOLLEDIG SCHERM AFBEELDING -->
   <div id="imageModal" class="fixed inset-0 z-[70] hidden">
-    <div class="absolute inset-0 bg-black/75" id="imageModalOverlay" onclick="closeImageModal()"></div>
+    <div id="imageModalOverlay" class="absolute inset-0 bg-black/75"></div>
 
-    <button onclick="closeImageModal()" class="fixed top-4 right-4 md:top-6 md:right-6 bg-black text-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg border border-white/20 z-[90] text-2xl leading-[0]" aria-label="Sluiten">×</button>
+    <button data-no-close class="fixed top-4 right-4 md:top-6 md:right-6 bg-black text-white rounded-full w-11 h-11 flex items-center justify-center shadow-lg border border-white/20 z-[90] text-2xl leading-[0]" onclick="closeImageModal()" aria-label="Sluiten">×</button>
 
-    <div class="relative z-[80] flex items-center justify-center w-full h-full pt-16 md:pt-20 px-4">
-      <img id="modalImage" src="" alt="" class="max-w-full w-auto h-auto object-contain rounded-lg shadow max-h-[calc(100vh-10rem)] md:max-h-[calc(100vh-12rem)]">
+    <div id="imageModalStage" class="relative z-[80] flex items-center justify-center w-full h-full pt-16 md:pt-20 px-4">
+      <img id="modalImage" src="" alt="" class="max-w-full w-auto h-auto object-contain rounded-lg shadow max-h-[calc(100vh-10rem)] md:max-h-[calc(100vh-12rem)]" onclick="event.stopPropagation()">
     </div>
   </div>
 
@@ -548,8 +548,10 @@
       const activityOverlay = document.getElementById('activityModalOverlay')
       if(activityOverlay){ activityOverlay.addEventListener('click', closeActivityModal) }
 
-      const imageModalOverlay = document.getElementById('imageModalOverlay')
-      if(imageModalOverlay){ imageModalOverlay.addEventListener('click', closeImageModal) }
+      const imageOverlay = document.getElementById('imageModalOverlay')
+      const imageStage = document.getElementById('imageModalStage')
+      if(imageOverlay){ imageOverlay.addEventListener('click', closeImageModal) }
+      if(imageStage){ imageStage.addEventListener('click', closeImageModal) }
 
       document.addEventListener('keydown', function(e){
         if(e.key==='Escape'){
