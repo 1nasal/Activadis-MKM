@@ -408,7 +408,7 @@
                 @endforeach
             ],
             primary_image_url: @json($activity->primary_image_url),
-            total_participants: {{ $activity->users->count() + $activity->externals->count() }},
+            total_participants: {{ $activity->users->count() + $activity->externals->where('confirmed', true)->count() }},
             is_enrolled: {{ auth()->check() && $activity->users->contains(auth()->id()) ? 'true' : 'false' }}
         };
 

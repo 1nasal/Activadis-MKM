@@ -71,7 +71,7 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Er is iets misgegaan bij het aanmaken van de gebruiker. Probeer het opnieuw.');
+                ->with('error', 'Er is iets misgegaan bij het aanmaken van de gebruiker. Probeer het opnieuw.' . $e);
         }
     }
 
