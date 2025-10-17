@@ -281,7 +281,7 @@
                 @endforeach
             ],
             primary_image: @json($activity->primary_image),
-            total_participants: {{ $activity->users->count() + $activity->externals->count() }},
+            total_participants: {{ $activity->users->count() + $activity->externals()->wherePivot('confirmed', true)->count() }},
             is_past: {{ $activity->end_time < now() ? 'true' : 'false' }}
         };
         @endforeach

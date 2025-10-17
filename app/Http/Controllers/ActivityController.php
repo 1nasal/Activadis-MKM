@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use App\Mail\ActivityJoinedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class ActivityController extends Controller
 {
@@ -340,11 +341,15 @@ class ActivityController extends Controller
     public function join(Request $request, Activity $activity)
     {
         if (Auth::guest()) {
-            $validated = $request->validate([
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
-                'email' => 'required|email|max:255',
-            ]);
+            try {
+                $validated = $request->validate([
+                    'first_name' => 'required|string|max:255',
+                    'last_name'  => 'required|string|max:255',
+                    'email'      => 'required|email:rfc,dns|max:255',
+                ]);
+            } catch (ValidationException $e) {
+                return back()->with('error', 'Het opgegeven e-mailadres is ongeldig of bestaat niet.');
+            }
 
             $external = \App\Models\External::firstOrCreate(
                 ['email' => $validated['email']],
