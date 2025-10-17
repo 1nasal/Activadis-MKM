@@ -8,7 +8,7 @@
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-                
+
                 <!-- Activity Images (met carousel) -->
                 @if($activity->images->count() > 0 || $activity->image)
                     <div class="mb-6">
@@ -16,8 +16,8 @@
                             @if($activity->images->count() === 1)
                                 <!-- Single image: contain (geen crop) -->
                                 <div class="w-full h-64 md:h-80 bg-gray-100 flex items-center justify-center">
-                                    <img src="{{ $activity->images->first()->url }}" 
-                                         alt="{{ $activity->name }}" 
+                                    <img src="{{ $activity->images->first()->url }}"
+                                         alt="{{ $activity->name }}"
                                          class="max-w-full max-h-full object-contain cursor-zoom-in"
                                          onclick="openImageModal('{{ $activity->images->first()->url }}', '{{ $activity->images->first()->original_name }}')">
                                 </div>
@@ -69,8 +69,8 @@
                         @elseif($activity->image)
                             <!-- Oude enkele image fallback -->
                             <div class="w-full h-64 md:h-80 bg-gray-100 flex items-center justify-center">
-                                <img src="{{ $activity->image }}" 
-                                     alt="{{ $activity->name }}" 
+                                <img src="{{ $activity->image }}"
+                                     alt="{{ $activity->name }}"
                                      class="max-w-full max-h-full object-contain cursor-zoom-in"
                                      onclick="openImageModal('{{ $activity->image }}', '{{ $activity->name }}')">
                             </div>
@@ -80,24 +80,24 @@
 
                 <div class="p-8">
                     <h3 class="text-3xl font-bold mb-6">{{ $activity->name }}</h3>
-                    
+
                     <div class="grid md:grid-cols-2 gap-8 mb-8">
                         <div class="space-y-4">
                             <div>
                                 <strong class="text-gray-700">Locatie:</strong>
                                 <span class="ml-2">{{ $activity->location }}</span>
                             </div>
-                            
+
                             <div>
                                 <strong class="text-gray-700">Starttijd:</strong>
                                 <span class="ml-2">{{ $activity->start_time->format('d-m-Y H:i') }}</span>
                             </div>
-                            
+
                             <div>
                                 <strong class="text-gray-700">Eindtijd:</strong>
                                 <span class="ml-2">{{ $activity->end_time->format('d-m-Y H:i') }}</span>
                             </div>
-                            
+
                             <div>
                                 <strong class="text-gray-700">Kosten:</strong>
                                 <span class="ml-2">
@@ -109,30 +109,31 @@
                                 </span>
                             </div>
                         </div>
-                        
+
                         <div class="space-y-4">
                             @if($activity->includes_food)
                                 <div>
                                     <span>Eten inbegrepen</span>
                                 </div>
                             @endif
-                            
+
                             @if($activity->max_participants)
                                 <div>
                                     <strong class="text-gray-700">Maximaal aantal deelnemers:</strong>
                                     <span class="ml-2">{{ $activity->max_participants }}</span>
                                 </div>
                             @endif
-                            
+
                             @if($activity->min_participants)
                                 <div>
                                     <strong class="text-gray-700">Minimaal aantal deelnemers:</strong>
                                     <span class="ml-2">{{ $activity->min_participants }}</span>
                                 </div>
                             @endif
-                            
+
                             @php
-                                $totalParticipants = $activity->users->count() + $activity->externals->count();
+                                $totalParticipants = $activity->users->count()
+                                    + $activity->externals()->wherePivot('confirmed', true)->count();
                             @endphp
                             <div>
                                 <strong class="text-gray-700">Aantal deelnemers:</strong>
@@ -142,16 +143,23 @@
                                     @endif
                                 </span>
                             </div>
+                            
+                            @if($activity->images->count() > 1)
+                                <div>
+                                    <strong class="text-gray-700">Afbeeldingen:</strong>
+                                    <span class="ml-2">{{ $activity->images->count() }} afbeeldingen beschikbaar</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
-                    
+
                     @if($activity->description)
                         <div class="mb-8">
                             <h4 class="text-xl font-semibold mb-3">Beschrijving</h4>
                             <p class="text-gray-700 leading-relaxed">{{ $activity->description }}</p>
                         </div>
                     @endif
-                    
+
                     @if($activity->requirements)
                         <div class="mb-8">
                             <h4 class="text-xl font-semibold mb-3">Vereisten</h4>
@@ -163,7 +171,7 @@
                     @if($totalParticipants > 0)
                         <div class="mb-8">
                             <h4 class="text-xl font-semibold mb-3">Deelnemers ({{ $totalParticipants }})</h4>
-                            
+
                             <div class="bg-gray-50 rounded-lg p-4">
                                 @if($activity->users->count() > 0)
                                     <div class="mb-4">
@@ -188,7 +196,7 @@
                                     </div>
                                 @endif
 
-                                @if($activity->externals->count() > 0)
+                                @if($activity->externals()->wherePivot('confirmed', true)->count() > 0)
                                     <div>
                                         <h5 class="font-medium text-gray-700 mb-2">Externe deelnemers</h5>
                                         <ul class="space-y-2">
@@ -219,7 +227,7 @@
                             </div>
                         </div>
                     @endif
-                    
+
                     <div class="flex space-x-4">
                         <a href="{{ route('activities.edit', $activity) }}" class="bg-yellow-500 text-white px-6 py-3 rounded-lg hover:bg-yellow-600 transition-colors">
                             Bewerk Activiteit

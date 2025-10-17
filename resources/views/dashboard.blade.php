@@ -113,12 +113,17 @@
                             </div>
 
                             <!-- Results count -->
+                            @php
+                                $incomingCount = $activities->filter(fn($activity) => $activity->end_time >= now())->count();
+                            @endphp
+
                             <span class="text-sm text-gray-600">
-                                {{ $activities->count() }} activiteit{{ $activities->count() !== 1 ? 'en' : '' }}
+                                {{ $incomingCount }} activiteit{{ $incomingCount !== 1 ? 'en' : '' }}
                                 @if(request('search'))
                                     <span class="text-gray-500">voor "{{ request('search') }}"</span>
                                 @endif
                             </span>
+
                         </div>
 
                         <!-- Reset button -->
@@ -276,7 +281,7 @@
                 @endforeach
             ],
             primary_image: @json($activity->primary_image),
-            total_participants: {{ $activity->users->count() + $activity->externals->count() }},
+            total_participants: {{ $activity->users->count() + $activity->externals()->wherePivot('confirmed', true)->count() }},
             is_past: {{ $activity->end_time < now() ? 'true' : 'false' }}
         };
         @endforeach

@@ -127,7 +127,7 @@
                                         $now = now();
                                         $isPast = $activity->end_time < $now;
                                         $isOngoing = $activity->start_time <= $now && $activity->end_time >= $now;
-                                        $totalParticipants = $activity->users->count() + $activity->externals->count();
+                                        $totalParticipants = $activity->users->count() + $activity->externals()->wherePivot('confirmed', true)->count();
                                     @endphp
                                     <li class="relative">
                                         <!-- Card link (unchanged) -->
